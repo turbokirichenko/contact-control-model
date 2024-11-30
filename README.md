@@ -35,7 +35,6 @@
 **intsllation**
 
 ```bash
-$ cd pixijs-typescript-vite-template
 $ npm install
 $ npm run dev -- --host
 ```
@@ -49,7 +48,6 @@ $ npm run build
 ### Docker
 
 ```bash
-$ cd pixijs-typescript-vite-template
 $ docker build -t pixi-template .
 $ docker run --name pixi-container -p 5173:5173 pixi-template
 ```

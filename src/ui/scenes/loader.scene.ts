@@ -1,5 +1,5 @@
 import { PixiContainer } from "../../plugins/engine";
-import { Manager, SceneInterface } from "../../entities/manager";
+import { Manager, SceneInterface } from "../../plugins/engine/manager";
 import { LoadingBarContainer } from "../containers/loading-bar.container";
 
 export class LoaderScene extends PixiContainer implements SceneInterface {
