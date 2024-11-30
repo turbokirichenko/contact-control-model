@@ -9,14 +9,13 @@ export interface CowInterface extends AgentInterface {
 
     go(): void;
     interrupt(): void;
-    remove(): void;
-
+    
     getPosition(): Vector2dInterface | null;
     permanentlyMoveTo(x: number, y: number): void;
 
     getDestinationPoint(): Vector2dInterface | null;
     setDestinationPoint(x: number, y: number): void;
+    getDirection(): number;
 
     isMoving(): boolean;
-    isRemoved(): boolean;
 }

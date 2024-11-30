@@ -14,8 +14,14 @@ export class Vector2dImpl implements Vector2dInterface {
         return Math.sqrt(dX*dX + dY*dY);
     };
     public shift(vect: Vector2dInterface, multiplex: number = 1): Vector2dInterface {
+        const interval = this.calcInterval(vect);
         var dX = this.x - vect.x;
         var dY = this.y - vect.y;
-        return new Vector2d((dX*multiplex)/Math.abs(dX), (dY*multiplex)/Math.abs(dY));
+        return new Vector2d((dX*multiplex)/interval, (dY*multiplex)/interval);
+    };
+    public direction(vect: Vector2dInterface): number {
+        var dX = this.x - vect.x;
+        var dY = this.y - vect.y;
+        return Math.PI/2 + Math.atan(dY/dX);
     };
 }

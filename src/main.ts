@@ -7,7 +7,17 @@ import { IPixiApplicationOptions, PixiAssets } from './plugins/engine';
 import { Loader } from './plugins/engine/loader';
 import { options } from './shared/config/manifest';
 import { LoaderScene } from './ui/scenes/loader.scene';
-import { GameScene } from './ui/scenes/game.scene';
+import { ModelScene } from './ui/scenes/model.scene';
+import { Cow } from './entities/cow';
+import { Farm } from './entities/farm';
+import { ModelImpl } from './entities/model/model.impl';
+
+const bootModel = () => {
+    const farm = new Farm();
+    const cow = new Cow(farm);
+    const model = new ModelImpl(cow, farm);
+    Manager.changeScene(new ModelScene(model));
+}
 
 const boostsrap = async () => {
     const canvas = document.getElementById("pixi-screen") as HTMLCanvasElement;
@@ -30,9 +40,7 @@ const boostsrap = async () => {
     const loader = new Loader(PixiAssets);
     const loaderScene = new LoaderScene();
     Manager.changeScene(loaderScene);
-    loader.download(options, loaderScene.progressCallback.bind(loaderScene)).then(() => {
-        Manager.changeScene(new GameScene());
-    });
+    loader.download(options, loaderScene.progressCallback.bind(loaderScene)).then(bootModel);
 }
 
 boostsrap();

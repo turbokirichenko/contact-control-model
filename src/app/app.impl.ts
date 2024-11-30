@@ -1,5 +1,5 @@
 import { PixiApplication, IPixiApplicationOptions } from '../plugins/engine';
-import { ApplicationInterface, StageInterface, PanelInterface, TickerInterface } from '../entities/manager';
+import { ApplicationInterface, StageInterface, PanelInterface, TickerInterface } from '../plugins/engine/manager';
 
 export class App implements ApplicationInterface {
     private _app: PixiApplication;
