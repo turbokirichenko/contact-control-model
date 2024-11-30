@@ -1,5 +1,5 @@
 import { PixiContainer, PixiSprite, PixiSoundLibrary, PixiText } from "../../plugins/engine";
-import { Manager, SceneInterface } from "../../entities/manager";
+import { Manager, SceneInterface } from "../../plugins/engine/manager";
 import { Assets } from "pixi.js";
 
 export class GameScene extends PixiContainer implements SceneInterface {
