@@ -1,4 +1,5 @@
 import { AgentInterface } from "../agent/agent.interface";
+import { Vector2dInterface } from "../math/vector2d";
 
 export interface CowInterface extends AgentInterface {
     width: number;
@@ -8,14 +9,12 @@ export interface CowInterface extends AgentInterface {
 
     go(): void;
     interrupt(): void;
-    wait(): void;
-    resume(): void;
     remove(): void;
 
-    getPosition(): { x: number, y: number };
+    getPosition(): Vector2dInterface | null;
     permanentlyMoveTo(x: number, y: number): void;
 
-    getDestinationPoint(): { x: number, y: number };
+    getDestinationPoint(): Vector2dInterface | null;
     setDestinationPoint(x: number, y: number): void;
 
     isMoving(): boolean;

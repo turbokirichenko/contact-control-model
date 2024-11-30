@@ -1,3 +1,3 @@
 export interface AgentInterface {
-    tick(): void;
+    tick(): void | Promise<void>;
 }
