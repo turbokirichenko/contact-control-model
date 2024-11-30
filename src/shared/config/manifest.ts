@@ -1,4 +1,4 @@
-import type { LoaderOptions } from "../../entities/loader";
+import type { LoaderOptions } from "../../plugins/engine/loader";
 
 export const options: LoaderOptions = {
     manifest: {
