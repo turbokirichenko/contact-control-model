@@ -11,11 +11,25 @@ import { ModelScene } from './ui/scenes/model.scene';
 import { Cow } from './entities/cow';
 import { Farm } from './entities/farm';
 import { ModelImpl } from './entities/model/model.impl';
+import { Vector2d } from './entities/math/vector2d';
+import { Cows } from './entities/cows/cows.impl';
 
 const bootModel = () => {
-    const farm = new Farm();
-    const cow = new Cow(farm);
-    const model = new ModelImpl(cow, farm);
+    var farm = new Farm();
+
+    var cows = new Cows()
+    for (var i = 0; i < 100; i++) {
+        var posX = farm.position.x + Math.random()*(farm.width)
+        var posY = farm.position.y + Math.random()*(farm.height);
+        var position = new Vector2d(posX, posY);
+        var vPosX = farm.position.x + Math.random()*(farm.width)
+        var vPosY = farm.position.y + Math.random()*(farm.height);
+        var destinationPoint = new Vector2d(vPosX, vPosY);
+        var cow = new Cow(farm, position, destinationPoint);
+        cows.push(cow);
+    }
+
+    const model = new ModelImpl(cows, farm);
     Manager.changeScene(new ModelScene(model));
 }
 

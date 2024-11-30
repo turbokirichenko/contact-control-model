@@ -1,19 +1,23 @@
-import { Cow } from "../cow";
-import { Farm } from "../farm";
+import { CowsInterface } from "../cows/cows.interface";
+import { FarmInterface } from "../farm";
 import { ModelInterface } from "./model.interface";
 
 export class ModelImpl implements ModelInterface {
     constructor(
-        public readonly cow: Cow,
-        public readonly farm: Farm,
+        public readonly cows: CowsInterface,
+        public readonly farm: FarmInterface,
     ) {}
 
     setup() {
-        this.cow.go();
+        this.cows.forEach((cow) => {
+            cow.go();
+        })
     }
 
     tick() {
-        this.cow.tick();
+        this.cows.forEach((cow) => {
+            cow.tick();
+        })
         this.farm.tick();
     }
 }

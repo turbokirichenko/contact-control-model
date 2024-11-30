@@ -8,6 +8,7 @@ export interface CowInterface extends AgentInterface {
     force: number;
 
     go(): void;
+    wait(): void;
     interrupt(): void;
     
     getPosition(): Vector2dInterface | null;

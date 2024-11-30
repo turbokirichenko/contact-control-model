@@ -1,9 +1,9 @@
 import { AgentInterface } from "../agent/agent.interface";
-import { Cow } from "../cow";
-import { Farm } from "../farm";
+import { CowsInterface } from "../cows";
+import { FarmInterface } from "../farm";
 
 export interface ModelInterface extends AgentInterface {
     setup(): Promise<void> | void;
-    cow: Cow;
-    farm: Farm;
+    cows: CowsInterface;
+    farm: FarmInterface;
 }
