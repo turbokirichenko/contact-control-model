@@ -1,10 +1,11 @@
 import { FarmInterface } from "../farm";
-import { Vector2dInterface } from "../math/vector2d";
+import { Vector2dInterface, Vector2d } from "../math/vector2d";
+import { ModelInterface } from "../model/model.interface";
 import { PopulationInterface } from "../population/population.interface";
 import { CowInterface } from "./cow.interface";
 
-const COW_DEFAULT_WIDTH = 0.84*3;
-const COW_DEFAULT_HEIGHT = 1.96*3;
+const COW_DEFAULT_WIDTH = 0.84*2;
+const COW_DEFAULT_HEIGHT = 1.96*2;
 const COW_DEFAULT_SPEED = 1;
 const WAITING_TIME = 60*5;
 
@@ -17,15 +18,14 @@ export class CowImpl implements CowInterface {
     public force: number;
     public population?: PopulationInterface<CowInterface> | undefined;
 
+    private _farm?: FarmInterface;
+    private _position: Vector2dInterface = new Vector2d(0, 0);
+    private _destinationPoint: Vector2dInterface = new Vector2d(0, 0);
     private _mode: CowMode = 'rest';
     private _waitingTime: number = WAITING_TIME;
     private _timer: number = 0;
 
-    constructor(
-        private readonly _farm: FarmInterface,
-        private _position: Vector2dInterface,
-        private _destinationPoint: Vector2dInterface
-    ) {
+    constructor() {
         this.width = COW_DEFAULT_WIDTH;
         this.height = COW_DEFAULT_HEIGHT;
         this.speed = COW_DEFAULT_SPEED;
@@ -51,6 +51,18 @@ export class CowImpl implements CowInterface {
                 this.wait();
             }
         }
+    }
+
+    public setup(model: ModelInterface): void {
+        var farm = model.farm;
+        this._farm = farm;
+        var posX = farm.position.x + Math.random()*(farm.width)
+        var posY = farm.position.y + Math.random()*(farm.height);
+        var vPosX = farm.position.x + Math.random()*(farm.width)
+        var vPosY = farm.position.y + Math.random()*(farm.height);
+        [this._position.x, this._position.y] = [posX, posY];
+        [this._destinationPoint.x, this._destinationPoint.y] = [vPosX, vPosY];
+        this.go();
     }
 
     public go(): void {
@@ -92,8 +104,11 @@ export class CowImpl implements CowInterface {
     }
 
     private generateDestinationPoint(): [number, number] {
-        var posX = this._farm.position.x + Math.random()*this._farm.width;
-        var posY = this._farm.position.y + Math.random()*this._farm.height;
-        return [posX, posY];
+        if (this._farm) {
+            var posX = this._farm?.position.x + Math.random()*this._farm?.width;
+            var posY = this._farm?.position.y + Math.random()*this._farm?.height;
+            return [posX, posY];
+        }
+        return [0, 0];
     }
 }

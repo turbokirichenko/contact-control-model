@@ -9,15 +9,11 @@ export class ModelImpl implements ModelInterface {
     ) {}
 
     setup() {
-        this.cows.forEach((cow) => {
-            cow.go();
-        })
+        this.cows.setup(this);
     }
 
     tick() {
-        this.cows.forEach((cow) => {
-            cow.tick();
-        })
+        this.cows.tick();
         this.farm.tick();
     }
 }

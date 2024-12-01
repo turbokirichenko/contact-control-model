@@ -8,7 +8,6 @@ export class ModelScene extends PixiContainer implements SceneInterface {
 
     constructor(private readonly _model: ModelInterface) {
         super();
-        this.interactive = true;
         this.position.x = 0;
         this.position.y = 0;
         const parentWidth = Manager.width;
@@ -27,8 +26,6 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         });
 
         this.addChild(...this._cowContainers);
-
-        _model.setup();
     }
 
     update(framesPassed: number): void {

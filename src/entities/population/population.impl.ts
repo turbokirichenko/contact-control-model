@@ -1,17 +1,25 @@
 import { AgentInterface } from "../agent/agent.interface";
+import { ModelInterface } from "../model/model.interface";
 import { PopulationInterface } from "./population.interface";
 
-export class PopulationImpl extends Array implements PopulationInterface<AgentInterface> {
-    constructor(agents?: AgentInterface[]) {
+export class PopulationImpl<T extends AgentInterface> extends Array implements PopulationInterface<T> {
+    constructor(private constr: { new(...args: any[]): T }) {
         super();
-        agents?.forEach((agent) => {
-            agent.population = this;
-            this.push(agent)
-        });
     }
 
-    push(agent: AgentInterface) {
+    tick() {}
+
+    setup(model: ModelInterface) {}
+
+    push(agent: T) {
         agent.population = this;
         return super.push(agent);
+    }
+
+    add() {
+        var agent = new this.constr();
+        agent.population = this;
+        super.push(agent);
+        return agent;
     }
 }
