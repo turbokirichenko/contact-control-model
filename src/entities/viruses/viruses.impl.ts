@@ -1,12 +1,10 @@
 import { CowInterface } from "../cow/cow.interface";
-import { CowsInterface } from "./cows.interface";
 import { PopulationImpl } from "../population/population.impl";
-import { AgentInterface } from "../agent/agent.interface";
 import { Cow } from "../cow";
 
-const INITIAL_NUMBER = 100;
+const INITIAL_NUMBER = 0;
 
-export class Cows extends PopulationImpl<CowInterface> implements CowsInterface, AgentInterface {
+export class Virusues extends PopulationImpl<CowInterface> {
     constructor() {
         super(Cow);
         this.initialNumber = INITIAL_NUMBER;

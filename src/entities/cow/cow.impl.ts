@@ -77,7 +77,7 @@ export class CowImpl implements CowInterface {
         this._mode = 'rest';
     }
 
-    public getPosition(): Vector2dInterface | null {
+    public getPosition(): Vector2dInterface {
         return this._position;
     }
 

@@ -2,8 +2,8 @@ import { Vector2d, Vector2dInterface } from "../math/vector2d";
 import { ModelInterface } from "../model/model.interface";
 import { FarmInterface } from "./farm.interface";
 
-const FARM_DEFAULT_WIDTH = 800;
-const FARM_DEAFULT_HEIGHT = 800;
+const FARM_DEFAULT_WIDTH = 1000;
+const FARM_DEAFULT_HEIGHT = 600;
 
 export class FarmImpl implements FarmInterface {
     public width: number;
