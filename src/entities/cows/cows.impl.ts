@@ -1,14 +1,12 @@
 import { CowInterface } from "../cow/cow.interface";
-import { CowsInterface } from "./cows.interface";
-import { PopulationImpl } from "../population/population.impl";
-import { AgentInterface } from "../agent/agent.interface";
 import { Cow } from "../cow";
+import { Population } from "../../plugins/htmodel";
 
 const INITIAL_NUMBER = 100;
+export const COWS_TOKEN = 'cows';
 
-export class Cows extends PopulationImpl<CowInterface> implements CowsInterface, AgentInterface {
+export class Cows extends Population<CowInterface> {
     constructor() {
-        super(Cow);
-        this.initialNumber = INITIAL_NUMBER;
+        super(Cow, INITIAL_NUMBER);
     };
 }

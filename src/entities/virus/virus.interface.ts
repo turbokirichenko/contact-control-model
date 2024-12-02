@@ -1,8 +1,8 @@
-import { AgentInterface } from "../agent/agent.interface";
+import { IAgent } from "../../plugins/htmodel";
 
 export type VirusState = 'none' | 'incubation' | 'active';
 
-export interface VirusInterface<T extends AgentInterface> extends AgentInterface {
+export interface VirusInterface<T extends IAgent> extends IAgent {
     infected: Map<number, T>;
     infectionRadius: number;
     incubationEffect: number;

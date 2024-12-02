@@ -1,17 +1,22 @@
-import { ModelInterface } from "../../entities/model/model.interface";
+import { COWS_TOKEN, Cows } from "../../entities/cows";
+import { Virus } from "../../entities/virus";
+import { VIRUS_TOKEN } from "../../entities/virus/virus.impl";
 import { PixiContainer,PixiGraphics, PixiText } from "../../plugins/engine";
 import { Manager, SceneInterface } from "../../plugins/engine/manager";
+import { IModel } from "../../plugins/htmodel";
 
-const X_SCORE = 10;
+const X_SCORE = 40;
 
 export class ModelScene extends PixiContainer implements SceneInterface {
 
     private _cowContainers: PixiContainer[] = [];
-    private _virusContainers: Map<number, PixiContainer> = new Map();
     private _text: PixiText = new PixiText({ text: 'time passed: ', style: { fontSize: '24px', fill: 'red' }});
+    private _virusContainers: Map<number, PixiContainer> = new Map();
     private secondCounter = 0;
+    private _virus: Virus;
+    private _cows: Cows;
 
-    constructor(private readonly _model: ModelInterface) {
+    constructor(private readonly _model: IModel) {
         super();
         this.position.x = 0;
         this.position.y = 0;
@@ -20,15 +25,20 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this.width = parentWidth;
         this.height = parentHeight;
 
-        this._model.cows.forEach((cow) => {
-            const cowRect = new PixiGraphics();
-            cowRect
-                .rect(-cow.width/2, -cow.height/2, cow.width, cow.height)
-                .fill('brown');
-            const cowContainer = new PixiContainer();
-            cowContainer.addChild(cowRect);
-            this._cowContainers.push(cowContainer);
-        });
+        this._cows = this._model.getInstance<Cows>(COWS_TOKEN)! as Cows;
+        this._virus = this._model.getInstance<Virus>(VIRUS_TOKEN)! as Virus;
+
+        if (this._cows) {
+            this._cows.forEach(cow => {
+                const cowRect = new PixiGraphics();
+                cowRect
+                    .rect(-cow.width/2, -cow.height/2, cow.width, cow.height)
+                    .fill('brown');
+                const cowContainer = new PixiContainer();
+                cowContainer.addChild(cowRect);
+                this._cowContainers.push(cowContainer);
+            });
+        }
 
         if(this._cowContainers.length) {
             this.addChild(...this._cowContainers);
@@ -41,26 +51,25 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     }
 
     update(framesPassed: number): void {
+        framesPassed = 0;
         if (Math.floor(this.secondCounter/(60*60)) >= 12) return;
         for (let i = 0; i < X_SCORE; ++i) {
             this.secondCounter++;
             this._model.tick();
-
-            this._model.cows.forEach((cow, index) => {
+            this._cows.forEach((cow, index) => {
                 const vect = cow.getPosition();
                 this._cowContainers[index].position.x = vect.x;
                 this._cowContainers[index].position.y = vect.y;
                 this._cowContainers[index].rotation = cow.getDirection();
-            });
-
-            this._model.virus.infected.forEach((infects, key) => {
+            })
+            this._virus.infected.forEach((infects, key) => {
                 if (!this._virusContainers.has(key)) {
                     const greenCircle = new PixiGraphics();
                     greenCircle
                         .circle(
                             infects.width/2, 
                             infects.height/2, 
-                            this._model.virus.infectionRadius
+                            this._virus.infectionRadius
                         )
                         .fill('green');
                     greenCircle.alpha = 0.5;
@@ -69,9 +78,8 @@ export class ModelScene extends PixiContainer implements SceneInterface {
                     this.addChild(container);
                 }
             });
-
             this._virusContainers.forEach((virus, key) => {
-                const vect = this._model.cows[key]?.getPosition();
+                const vect = this._cows[key]?.getPosition();
                 virus.position.x = vect.x;
                 virus.position.y = vect.y;
             });
@@ -81,6 +89,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     }
 
     resize(parentWidth: number, parentHeight: number): void {
-
+        parentWidth = 0;
+        parentHeight = 0;
     }
 }

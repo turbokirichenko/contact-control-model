@@ -1,7 +1,9 @@
 import { VirusInterface, VirusState } from "./virus.interface";
 import { CowInterface } from "../cow";
-import { ModelInterface } from "../model/model.interface";
-import { CowsInterface } from "../cows";
+import { IModel } from "../../plugins/htmodel";
+import { Cows, COWS_TOKEN } from "../cows";
+
+export const VIRUS_TOKEN = 'virus';
 
 export class VirusImpl implements VirusInterface<CowInterface> {
 
@@ -11,8 +13,6 @@ export class VirusImpl implements VirusInterface<CowInterface> {
     public spreadProbability: number;
     public killProbability: number;
     public state: VirusState;
-    private _counter = 0;
-    private _tryTime = 5;
 
     constructor() {
         this.infectionRadius = 10;
@@ -38,21 +38,36 @@ export class VirusImpl implements VirusInterface<CowInterface> {
         this.infected.set(key, infected);
     }
 
-    public setup(model: ModelInterface) {
-        const infectedIndex = Math.floor(Math.random()*model.cows.length);
-        const infected = model.cows[infectedIndex];
-        this.infected.set(infectedIndex, infected);
+    public setup(model: IModel) {
+        const cows = model.getInstance<Cows>(COWS_TOKEN);
+        if (cows) {
+            const infectedIndex = Math.floor(Math.random()*cows.length);
+            const infected = cows[infectedIndex];
+            this.infected.set(infectedIndex, infected);
+        }
     }
 
     public tick() {
         this.trySpread();
     }
 
+    public stop(): void {
+        
+    }
+
+    public resume(): void {
+        
+    }
+
+    public get isActive(): boolean {
+        return true;
+    }
+
     private searchCowsOnArea(infected: CowInterface): [number, CowInterface][] {
         const coord = infected.getPosition();
-        const cows = infected.population as CowsInterface;
+        const cows = infected.population as Cows;
         if (cows) {
-            const radiusCows: [number, CowInterface][] = []
+            const radiusCows: [number, CowInterface][] = [];
             cows.map((cow, index) => {
                 if (cow.getPosition().calcInterval(coord) < this.infectionRadius) {
                     radiusCows.push([index, cow]);
