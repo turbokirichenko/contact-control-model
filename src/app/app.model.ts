@@ -7,6 +7,6 @@ import { DefineModel } from "../plugins/htmodel";
 @DefineModel([
     { token: COWS_TOKEN, class: Cows },
     { token: FARM_TOKEN, class: Farm },
-    { token: VIRUS_TOKEN, class: Virus },
+    { token: VIRUS_TOKEN, class: Virus }
 ])
 export class AppModel {};

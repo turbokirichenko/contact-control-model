@@ -1,8 +1,8 @@
-import { AgentInterface } from "../agent/agent.interface";
+import { IAgent } from "../../plugins/htmodel";
+import { CowInterface } from "../cow";
 
 export interface DecodedSignal {
-    prevHash: string;
-    scanHash: string;
+    uid: string;
     date: Date;
 }
 
@@ -11,12 +11,13 @@ export interface InputDevice {
 }
 
 export interface StreamDevice {
-    streamWave(): boolean;
+    stream(): boolean;
 }
 
-export interface SensorInterface extends AgentInterface {
+export interface SensorInterface extends IAgent {
+    uid: string;
+    depends?: CowInterface;
     inputDevice: InputDevice;
     streamDevice: StreamDevice;
     storage: DecodedSignal[];
-    getInfograph(): object;
 }

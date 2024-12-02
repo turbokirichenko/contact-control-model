@@ -3,9 +3,9 @@ import { FarmInterface, FARM_TOKEN } from "../farm";
 import { Vector2dInterface, Vector2d } from "../math/vector2d";
 import { CowInterface } from "./cow.interface";
 
-const COW_DEFAULT_WIDTH = 0.84*2;
-const COW_DEFAULT_HEIGHT = 1.96*2;
-const COW_DEFAULT_SPEED = 1;
+const COW_DEFAULT_WIDTH = 0.84*4;
+const COW_DEFAULT_HEIGHT = 1.96*4;
+const COW_DEFAULT_SPEED = 2;
 const WAITING_TIME = 60;
 
 export type CowMode = 'move' | 'rest' | 'wait';
@@ -43,13 +43,13 @@ export class Cow implements CowInterface {
         }
         if (this._mode === 'move') {
             const distance = this._position.calcInterval(this._destinationPoint);
-            if (distance > 1) {
+            if (distance > this.speed) {
                 const deltaVector = this._position.shift(this._destinationPoint, this.speed);
                 this._position.x -= deltaVector.x;
                 this._position.y -= deltaVector.y;
             } else {
                 this._timer = 0;
-                this._waitingTime = 10 + WAITING_TIME*Math.random()*10;
+                this._waitingTime = WAITING_TIME*15 + WAITING_TIME*Math.random()*10;
                 this.wait();
             }
         }

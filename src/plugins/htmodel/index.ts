@@ -116,10 +116,26 @@ export abstract class ModelFactory {
     private constructor() {}
     public static create(constuctor: new () => any): IModel {
         const model = new constuctor();
-        if ((model.htmodel as IAgentMap).has) {
-            console.log(model.htmodel);
+        if (model.htmodel && (model.htmodel as IAgentMap).has) {
             return new Model(model.htmodel);
         }
-        throw new Error('cannot recognized model');
+        throw new Error('cannot recognize a model');
+    }
+}
+
+export type PresentationRule<T, R> = ((target: T, model: IModel, ...args: any[]) => R) | R;
+export interface PresentationConfig<T extends IAgent> {
+    anchor?: PresentationRule<T, number>;
+    width?: PresentationRule<T, number>;
+    height?: PresentationRule<T, number>;
+    alias?: PresentationRule<T, string>;
+    fill?: PresentationRule<T, string | number>;
+    position?: PresentationRule<T, [number, number]>;
+    direction?: PresentationRule<T, number>;
+}
+export function Presentation<T extends IAgent>(config: PresentationConfig<T>) {
+    config = {};
+    return function <T extends { new(...args: any[]): {} }>(constructor: T) {
+        return class extends constructor {}
     }
 }
