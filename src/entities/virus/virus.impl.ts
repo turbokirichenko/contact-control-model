@@ -22,7 +22,7 @@ export class VirusImpl implements VirusInterface<CowInterface> {
         this.killProbability = 0.01;
         this.state = 'none';
     }
-
+    
     public trySpread(): boolean {
         this.infected.forEach((infects) => {
             const cows = this.searchCowsOnArea(infects);
@@ -34,11 +34,9 @@ export class VirusImpl implements VirusInterface<CowInterface> {
         });
         return false;
     }
-
     public spread(key: number, infected: CowInterface): void {
         this.infected.set(key, infected);
     }
-
     public setup(model: IModel) {
         const cows = model.getPopulation(COW_TOKEN) as IPopulation<Cow>;
         if (cows) {
@@ -47,23 +45,9 @@ export class VirusImpl implements VirusInterface<CowInterface> {
             this.infected.set(infectedIndex, infected);
         }
     }
-
     public tick() {
         this.trySpread();
     }
-
-    public stop(): void {
-        
-    }
-
-    public resume(): void {
-        
-    }
-
-    public get isActive(): boolean {
-        return true;
-    }
-
     private searchCowsOnArea(infected: CowInterface): [number, CowInterface][] {
         const coord = infected.getPosition();
         const cows = infected.population as IPopulation<Cow>;

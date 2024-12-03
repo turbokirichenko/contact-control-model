@@ -68,14 +68,6 @@ export class Cow implements CowInterface {
         this.go();
     }
 
-    public stop(): void {
-        
-    }
-
-    public resume(): void {
-        
-    }
-
     public go(): void {
         this._mode = 'move';
     }
@@ -121,9 +113,5 @@ export class Cow implements CowInterface {
             return [posX, posY];
         }
         return [0, 0];
-    }
-
-    get isActive() {
-        return true;
     }
 }

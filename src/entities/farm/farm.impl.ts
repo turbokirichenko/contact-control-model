@@ -19,8 +19,5 @@ export class Farm implements FarmInterface {
     }
 
     tick() {}
-    setup(model: IModel) { model; }
-    stop(): void {}
-    resume(): void {}
-    get isActive(): boolean { return true; }
+    setup(_model: IModel) {}
 }

@@ -3,9 +3,6 @@ export interface IAgent {
     population?: IPopulation<any>;
     setup(model?: IModel): void | Promise<void>;
     tick(): void;
-    stop(): void;
-    resume(): void;
-    get isActive(): boolean;
 }
 
 export interface IPopulation<T extends IAgent> extends IAgent {
@@ -32,6 +29,8 @@ export interface PopulationConfig {
     size?: number;
 }
 
+export interface IAgentMap extends Map<string, IAgent> {};
+
 class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
     constructor(constr: { new(...args: any[]): T },     initialNumber?: number);
     constructor(value: T,                               initialNumber?: number);
@@ -56,9 +55,6 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
             agent.tick();
         });
     }
-    public stop() {}
-    public resume() {}
-    public get isActive() { return true }
     public push(agent: T) {
         if (agent.population) {
             throw new Error('Impossible to set population to the agent that already in any population');
@@ -67,13 +63,13 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
         return super.push(agent);
     }
     public add() {
-        var agent = this.fabric();
+        var agent = this._fabric();
         agent.population = this;
         super.push(agent);
         return agent;
     }
     public forEach = super.forEach;
-    private fabric(): T {
+    private _fabric(): T {
         if (this._constr) {
             return new this._constr() as T;
         } else {
@@ -82,9 +78,7 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
     }
 }
 
-export interface IAgentMap extends Map<string, IAgent> {};
-
-export class Model implements IModel {
+class Model implements IModel {
     private readonly _agents: IAgent[] = [];
     constructor(private readonly _map: IAgentMap) {
         this._map.forEach((_, key)=> {
@@ -112,17 +106,6 @@ export class Model implements IModel {
             agent.tick();
         });
     }
-    public stop() {
-        this._agents.map(agent => {
-            agent.stop();
-        });
-    }
-    public resume() {
-        this._agents.map(agent => {
-            agent.resume();
-        });
-    }
-    get isActive() { return true };
 }
 
 export function DefineModel(_config: ModelConfig) {
