@@ -27,7 +27,7 @@ export class VirusImpl implements VirusInterface<CowInterface> {
         this.infected.forEach((infects) => {
             const cows = this.searchCowsOnArea(infects);
             cows.map(([key, cow ]) => {
-                if (Math.random()*1000 < this.spreadProbability*1000) {
+                if (Math.random() < this.spreadProbability) {
                     this.spread(key, cow);
                 }
             });

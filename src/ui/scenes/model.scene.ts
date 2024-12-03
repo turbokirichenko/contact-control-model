@@ -53,8 +53,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this.addChild(this._text);
     }
 
-    update(framesPassed: number): void {
-        framesPassed = 0;
+    update(_framesPassed: number): void {
         if (Math.floor(this.secondCounter/(60*60)) >= 12) return;
         console.log('ok');
         for (let i = 0; i < X_SCORE; ++i) {
@@ -92,8 +91,5 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min`
     }
 
-    resize(parentWidth: number, parentHeight: number): void {
-        parentWidth = 0;
-        parentHeight = 0;
-    }
+    resize(_parentWidth: number, _parentHeight: number): void {}
 }

@@ -16,14 +16,23 @@ export interface IPopulation<T extends IAgent> extends IAgent {
     forEach(callbackfn: (value: T, index: number, array: T[]) => void, thisArg?: any): void
 }
 
+export interface IModel extends IAgent {
+    getInstance<T extends IAgent>(token: string): T | undefined;
+    getPopulation<T extends IPopulation<IAgent>>(token: string): T | undefined;
+    getAgentFromPopulationByIndex<T extends IAgent>(token: string, index: number): T | undefined;
+}
+
+export interface ModelConfig {
+    [agentsPopulationName: string]: PopulationConfig;
+}
+
+export interface PopulationConfig {
+    useValue?: IAgent;
+    useClass?: new () => IAgent;
+    size?: number;
+}
+
 class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
-    public population?: IPopulation<Population<T>> | undefined;
-    static create<T extends IAgent>(obj: T): typeof Population<typeof obj> {
-        return Population<T>;
-    }
-    private _constr?: { new(...args: any[]): T };
-    private _value?: T;
-    public get size() { return this.length }
     constructor(constr: { new(...args: any[]): T },     initialNumber?: number);
     constructor(value: T,                               initialNumber?: number);
     constructor(constr: { new(...args: any[]): T } | T, initialNumber: number = 100) {
@@ -33,11 +42,15 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
             this.add();
         }
     }
+    public population?: IPopulation<Population<T>> | undefined;
+    private _constr?: { new(...args: any[]): T };
+    private _value?: T;
+    public get size() { return this.length }
     public setup(model?: IModel) {
         this.forEach(agent => {
             agent.setup(model)
         });
-    };
+    }
     public tick() {
         this.forEach(agent => {
             agent.tick();
@@ -69,18 +82,11 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
     }
 }
 
-export interface IModel extends IAgent {
-    getInstance<T extends IAgent>(token: string): T | undefined;
-    getPopulation<T extends IPopulation<IAgent>>(token: string): T | undefined;
-    getAgentFromPopulationByIndex<T extends IAgent>(token: string, index: number): T | undefined;
-}
-
 export interface IAgentMap extends Map<string, IAgent> {};
-export interface IPopulationMap extends Map<string, IAgent> {};
 
 export class Model implements IModel {
     private readonly _agents: IAgent[] = [];
-    constructor(private readonly _map: IPopulationMap) {
+    constructor(private readonly _map: IAgentMap) {
         this._map.forEach((_, key)=> {
             const agent = this._map.get(key) as IAgent;
             this._agents.push(agent);
@@ -119,45 +125,26 @@ export class Model implements IModel {
     get isActive() { return true };
 }
 
-export interface AgentsConfig {
-    token: string;
-    class: new (...args: any[]) => IAgent;
-}
-
-export interface ModelConfig {
-    [agentsPopulationName: string]: PopulationConfig;
-}
-
-export interface PopulationConfig {
-    useValue?: IAgent;
-    useClass?: new () => IAgent;
-    size?: number;
-}
-
 export function DefineModel(_config: ModelConfig) {
     var agentsMap: IAgentMap = new Map<string, IAgent>();
     return function <T extends { new(...args: any[]): {} }>(constructor: T) {
         var modelTokens = Object.keys(_config);
-        modelTokens.map(token => {
-            if (agentsMap.has(token)) {
-                
-            } else {
-                var populationConfig = _config[token];
-                if (!populationConfig.useValue && !populationConfig.useClass) {
-                    throw new Error('one of useValue or useClass must contain type PopulationConfig')
+        modelTokens.forEach(token => {
+            var populationConfig = _config[token];
+            if (!populationConfig.useValue && !populationConfig.useClass) {
+                throw new Error('one of useValue or useClass must contain type PopulationConfig')
+            }
+            else if (!populationConfig.size || populationConfig.size < 0) {
+                if (populationConfig.useClass) {
+                    agentsMap.set(token, new populationConfig.useClass())
                 }
-                else if (!populationConfig.size || populationConfig.size < 0) {
-                    if (populationConfig.useClass) {
-                        agentsMap.set(token, new populationConfig.useClass())
-                    }
-                    else if (populationConfig.useValue) {
-                        agentsMap.set(token, populationConfig.useValue);
-                    }
+                else if (populationConfig.useValue) {
+                    agentsMap.set(token, populationConfig.useValue);
                 }
-                else {
-                    if (populationConfig.useClass) {
-                        agentsMap.set(token, new Population(populationConfig.useClass, populationConfig.size))
-                    }
+            }
+            else {
+                if (populationConfig.useClass) {
+                    agentsMap.set(token, new Population(populationConfig.useClass, populationConfig.size))
                 }
             }
         });
@@ -193,21 +180,5 @@ export abstract class ModelFactory {
             return new Model(model.htmodel);
         }
         throw new Error('cannot recognize a model');
-    }
-}
-
-export type PresentationRule<T, R> = ((target: T, model: IModel, ...args: any[]) => R) | R;
-export interface PresentationConfig<T extends IAgent> {
-    anchor?: PresentationRule<T, number>;
-    width?: PresentationRule<T, number>;
-    height?: PresentationRule<T, number>;
-    alias?: PresentationRule<T, string>;
-    fill?: PresentationRule<T, string | number>;
-    position?: PresentationRule<T, [number, number]>;
-    direction?: PresentationRule<T, number>;
-}
-export function Presentation<T extends IAgent>(_config: PresentationConfig<T>) {
-    return function <T extends { new(...args: any[]): {} }>(constructor: T) {
-        return class extends constructor {}
     }
 }
