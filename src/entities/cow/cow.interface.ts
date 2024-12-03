@@ -1,7 +1,7 @@
-import { AgentInterface } from "../agent/agent.interface";
+import { IAgent } from "../../plugins/htmodel";
 import { Vector2dInterface } from "../math/vector2d";
 
-export interface CowInterface extends AgentInterface {
+export interface CowInterface extends IAgent {
     width: number;
     height: number;
     speed: number;

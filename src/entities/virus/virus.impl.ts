@@ -1,7 +1,10 @@
 import { VirusInterface, VirusState } from "./virus.interface";
 import { CowInterface } from "../cow";
-import { ModelInterface } from "../model/model.interface";
-import { CowsInterface } from "../cows";
+import { IModel } from "../../plugins/htmodel";
+import { Cow, COW_TOKEN } from "../cow";
+import { IPopulation } from "../../plugins/htmodel";
+
+export const VIRUS_TOKEN = 'virus';
 
 export class VirusImpl implements VirusInterface<CowInterface> {
 
@@ -11,8 +14,6 @@ export class VirusImpl implements VirusInterface<CowInterface> {
     public spreadProbability: number;
     public killProbability: number;
     public state: VirusState;
-    private _counter = 0;
-    private _tryTime = 5;
 
     constructor() {
         this.infectionRadius = 10;
@@ -26,7 +27,7 @@ export class VirusImpl implements VirusInterface<CowInterface> {
         this.infected.forEach((infects) => {
             const cows = this.searchCowsOnArea(infects);
             cows.map(([key, cow ]) => {
-                if (Math.random()*1000 < this.spreadProbability*1000) {
+                if (Math.random() < this.spreadProbability) {
                     this.spread(key, cow);
                 }
             });
@@ -38,26 +39,41 @@ export class VirusImpl implements VirusInterface<CowInterface> {
         this.infected.set(key, infected);
     }
 
-    public setup(model: ModelInterface) {
-        const infectedIndex = Math.floor(Math.random()*model.cows.length);
-        const infected = model.cows[infectedIndex];
-        this.infected.set(infectedIndex, infected);
+    public setup(model: IModel) {
+        const cows = model.getPopulation(COW_TOKEN) as IPopulation<Cow>;
+        if (cows) {
+            const infectedIndex = Math.floor(Math.random()*cows.size);
+            const infected = cows[infectedIndex] as CowInterface;
+            this.infected.set(infectedIndex, infected);
+        }
     }
 
     public tick() {
         this.trySpread();
     }
 
+    public stop(): void {
+        
+    }
+
+    public resume(): void {
+        
+    }
+
+    public get isActive(): boolean {
+        return true;
+    }
+
     private searchCowsOnArea(infected: CowInterface): [number, CowInterface][] {
         const coord = infected.getPosition();
-        const cows = infected.population as CowsInterface;
+        const cows = infected.population as IPopulation<Cow>;
         if (cows) {
-            const radiusCows: [number, CowInterface][] = []
-            cows.map((cow, index) => {
-                if (cow.getPosition().calcInterval(coord) < this.infectionRadius) {
-                    radiusCows.push([index, cow]);
+            const radiusCows: [number, CowInterface][] = [];
+            for (let i = 0; i < cows.size; ++i) {
+                if (cows[i].getPosition().calcInterval(coord) < this.infectionRadius) {
+                    radiusCows.push([i, cows[i]]);
                 }
-            })
+            }
             return radiusCows;
         }
         return [];
