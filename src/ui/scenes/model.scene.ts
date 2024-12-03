@@ -1,9 +1,9 @@
-import { COWS_TOKEN, Cows } from "../../entities/cows";
+import { CowInterface, COW_TOKEN } from "../../entities/cow";
 import { Virus } from "../../entities/virus";
 import { VIRUS_TOKEN } from "../../entities/virus/virus.impl";
 import { PixiContainer,PixiGraphics, PixiText } from "../../plugins/engine";
 import { Manager, SceneInterface } from "../../plugins/engine/manager";
-import { IModel } from "../../plugins/htmodel";
+import { IModel, IPopulation } from "../../plugins/htmodel";
 
 const X_SCORE = 20;
 
@@ -14,7 +14,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     private _virusContainers: Map<number, PixiContainer> = new Map();
     private secondCounter = 0;
     private _virus?: Virus;
-    private _cows?: Cows;
+    private _cows?: IPopulation<CowInterface>;
 
     constructor(private readonly _model: IModel) {
         super();
@@ -25,11 +25,13 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this.width = parentWidth;
         this.height = parentHeight;
 
-        this._cows = this._model.getInstance<Cows>(COWS_TOKEN)! as Cows;
+        this._cows = this._model.getPopulation(COW_TOKEN)! as IPopulation<CowInterface>;
         this._virus = this._model.getInstance<Virus>(VIRUS_TOKEN)! as Virus;
 
         if (this._cows) {
+            console.log(this._cows)
             this._cows.forEach(cow => {
+                console.log('1')
                 const cowRect = new PixiGraphics();
                 cowRect
                     .rect(-cow.width/2, -cow.height/2, cow.width, cow.height)
@@ -41,6 +43,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         }
 
         if(this._cowContainers.length) {
+            console.log('added')
             this.addChild(...this._cowContainers);
         }
 
@@ -53,6 +56,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     update(framesPassed: number): void {
         framesPassed = 0;
         if (Math.floor(this.secondCounter/(60*60)) >= 12) return;
+        console.log('ok');
         for (let i = 0; i < X_SCORE; ++i) {
             this.secondCounter++;
             this._model.tick();

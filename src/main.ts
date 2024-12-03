@@ -35,6 +35,7 @@ const boostsrap = async () => {
         const model = ModelFactory.create(AppModel);
         model.setup();
         const scene = new ModelScene(model);
+        console.log('okk');
         Manager.changeScene(scene);
     });
 }

@@ -1,7 +1,8 @@
 import { VirusInterface, VirusState } from "./virus.interface";
 import { CowInterface } from "../cow";
 import { IModel } from "../../plugins/htmodel";
-import { Cows, COWS_TOKEN } from "../cows";
+import { Cow, COW_TOKEN } from "../cow";
+import { IPopulation } from "../../plugins/htmodel";
 
 export const VIRUS_TOKEN = 'virus';
 
@@ -39,10 +40,10 @@ export class VirusImpl implements VirusInterface<CowInterface> {
     }
 
     public setup(model: IModel) {
-        const cows = model.getInstance<Cows>(COWS_TOKEN);
+        const cows = model.getPopulation(COW_TOKEN) as IPopulation<Cow>;
         if (cows) {
-            const infectedIndex = Math.floor(Math.random()*cows.length);
-            const infected = cows[infectedIndex];
+            const infectedIndex = Math.floor(Math.random()*cows.size);
+            const infected = cows[infectedIndex] as CowInterface;
             this.infected.set(infectedIndex, infected);
         }
     }
@@ -65,14 +66,14 @@ export class VirusImpl implements VirusInterface<CowInterface> {
 
     private searchCowsOnArea(infected: CowInterface): [number, CowInterface][] {
         const coord = infected.getPosition();
-        const cows = infected.population as Cows;
+        const cows = infected.population as IPopulation<Cow>;
         if (cows) {
             const radiusCows: [number, CowInterface][] = [];
-            cows.map((cow, index) => {
-                if (cow.getPosition().calcInterval(coord) < this.infectionRadius) {
-                    radiusCows.push([index, cow]);
+            for (let i = 0; i < cows.size; ++i) {
+                if (cows[i].getPosition().calcInterval(coord) < this.infectionRadius) {
+                    radiusCows.push([i, cows[i]]);
                 }
-            })
+            }
             return radiusCows;
         }
         return [];
