@@ -11,37 +11,17 @@ export class Sensor implements SensorInterface {
             }
         }
     }
-
     public streamDevice: StreamDevice = {
         stream: () => {
             return true;
         }
     }
-
     public uid: string;
     public storage: DecodedSignal[] = [];
 
     constructor(public _depends?: CowInterface) {
         this.uid = (Math.random()*1e8).toString(16);
     }
-
-    public setup(_model: IModel) {
-   
-    }
-
-    public tick(): void {
-
-    }
-
-    public stop(): void {
-        
-    }
-
-    public resume(): void {
-        
-    }
-
-    public get isActive(): boolean {
-        return true;
-    }
+    public setup(_model: IModel) {}
+    public tick(): void {}
 }

@@ -1,5 +1,5 @@
 import { IAgent } from "../../plugins/htmodel";
-import { CowInterface } from "../cow";
+import { ICow } from "../cow";
 
 export interface DecodedSignal {
     uid: string;
@@ -16,7 +16,7 @@ export interface StreamDevice {
 
 export interface SensorInterface extends IAgent {
     uid: string;
-    depends?: CowInterface;
+    depends?: ICow;
     inputDevice: InputDevice;
     streamDevice: StreamDevice;
     storage: DecodedSignal[];
