@@ -26,7 +26,8 @@ export class Cow implements CowInterface {
     private _waitingTime: number = WAITING_TIME;
     private _timer: number = 0;
 
-    constructor() {
+    constructor(private readonly _model: IModel) {
+        this._farm = this._model.getOne<FarmInterface>(FARM_TOKEN);
         this.width = COW_DEFAULT_WIDTH;
         this.height = COW_DEFAULT_HEIGHT;
         this.speed = COW_DEFAULT_SPEED;
@@ -55,10 +56,9 @@ export class Cow implements CowInterface {
         }
     }
 
-    public setup(model: IModel): void {
-        var farm = model.getInstance<FarmInterface>(FARM_TOKEN);
-        if (!farm) return;
-        this._farm = farm;
+    public setup(): void {
+        if (!this._farm) return;
+        var farm = this._farm;
         var posX = farm.position.x + Math.random()*(farm.width)
         var posY = farm.position.y + Math.random()*(farm.height);
         var vPosX = farm.position.x + Math.random()*(farm.width)

@@ -15,7 +15,13 @@ export class VirusImpl implements VirusInterface<CowInterface> {
     public killProbability: number;
     public state: VirusState;
 
-    constructor() {
+    constructor(private readonly _model: IModel) {
+        const cows = this._model.getPopulation(COW_TOKEN) as IPopulation<Cow>;
+        if (cows) {
+            const infectedIndex = Math.floor(Math.random()*cows.size);
+            const infected = cows[infectedIndex] as CowInterface;
+            this.infected.set(infectedIndex, infected);
+        }
         this.infectionRadius = 10;
         this.spreadProbability = 0.001;
         this.incubationEffect = 12*60*60;
@@ -37,14 +43,7 @@ export class VirusImpl implements VirusInterface<CowInterface> {
     public spread(key: number, infected: CowInterface): void {
         this.infected.set(key, infected);
     }
-    public setup(model: IModel) {
-        const cows = model.getPopulation(COW_TOKEN) as IPopulation<Cow>;
-        if (cows) {
-            const infectedIndex = Math.floor(Math.random()*cows.size);
-            const infected = cows[infectedIndex] as CowInterface;
-            this.infected.set(infectedIndex, infected);
-        }
-    }
+    public setup() {}
     public tick() {
         this.trySpread();
     }

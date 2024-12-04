@@ -14,9 +14,9 @@ export interface IPopulation<T extends IAgent> extends IAgent {
 }
 
 export interface IModel extends IAgent {
-    getInstance<T extends IAgent>(token: string): T | undefined;
+    getInstance<T extends IAgent>(token: string): IPopulation<T>;
     getPopulation<T extends IPopulation<IAgent>>(token: string): T | undefined;
-    getAgentFromPopulationByIndex<T extends IAgent>(token: string, index: number): T | undefined;
+    getOne<T extends IAgent>(token: string, index?: number): T | undefined;
 }
 
 export interface ModelConfig {
@@ -29,12 +29,13 @@ export interface PopulationConfig {
     size?: number;
 }
 
-export interface IAgentMap extends Map<string, IAgent> {};
+export interface IAgentMap extends Map<string, PopulationConfig> {};
+export interface IModelMap extends Map<string, IPopulation<IAgent>> {};
 
 class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
-    constructor(constr: { new(...args: any[]): T },     initialNumber?: number);
-    constructor(value: T,                               initialNumber?: number);
-    constructor(constr: { new(...args: any[]): T } | T, initialNumber: number = 100) {
+    constructor(model: IModel, constr: { new(...args: any[]): T },     initialNumber?: number);
+    constructor(model: IModel, value: T,                               initialNumber?: number);
+    constructor(private readonly _model: IModel, constr: { new(...args: any[]): T } | T, initialNumber: number = 100) {
         super();
         this._constr = constr as { new (...args: any[]): T };
         for (let i = 0; i < initialNumber; ++i) {
@@ -71,7 +72,7 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
     public forEach = super.forEach;
     private _fabric(): T {
         if (this._constr) {
-            return new this._constr() as T;
+            return new this._constr(this._model) as T;
         } else {
             return this._value as T;
         }
@@ -80,9 +81,11 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
 
 class Model implements IModel {
     private readonly _agents: IAgent[] = [];
-    constructor(private readonly _map: IAgentMap) {
-        this._map.forEach((_, key)=> {
-            const agent = this._map.get(key) as IAgent;
+    private readonly _map: IModelMap;
+    constructor(private readonly _gap: IAgentMap) {
+        this._map = new Map<string, IPopulation<IAgent>>();
+        this._gap.forEach((_, key)=> {
+            const agent = this.getInstance(key);
             this._agents.push(agent);
         });
     }
@@ -92,14 +95,26 @@ class Model implements IModel {
             agent.setup(this);
         });
     }
-    public getInstance<T extends IAgent>(token: string): T | undefined {
-        return this._map.get(token) as T;
+    public getInstance<T extends IAgent>(token: string): IPopulation<T> {
+        if (this._map.has(token)) {
+            return this._map.get(token)! as IPopulation<T>;
+        } else {
+            if (!this._gap.has(token)) {
+                throw new Error('a token is not exist in the scope');
+            }
+            const config = this._gap.get(token);
+            if (config && config.useClass) {
+                this._map.set(token, new Population(this, config.useClass, config.size))
+                return this._map.get(token)! as IPopulation<T>;
+            }
+            throw new Error('empty useClass');
+        }
     }
     public getPopulation<T extends IPopulation<IAgent>>(token: string): T | undefined {
-        return this._map.get(token) as T;
+        return this.getInstance(token) as T;
     }
-    public getAgentFromPopulationByIndex<T extends IAgent>(token: string, index: number): T | undefined {
-        return (this._map.get(token) as Population<T>)[index] as T;
+    public getOne<T extends IAgent>(token: string, index: number = 0): T | undefined {
+        return (this.getInstance<T>(token) as IPopulation<T>)[index] as T;
     }
     public tick() {
         this._agents.map(agent => {
@@ -109,49 +124,16 @@ class Model implements IModel {
 }
 
 export function DefineModel(_config: ModelConfig) {
-    var agentsMap: IAgentMap = new Map<string, IAgent>();
+    var agentsMap: IAgentMap = new Map<string, PopulationConfig>();
     return function <T extends { new(...args: any[]): {} }>(constructor: T) {
         var modelTokens = Object.keys(_config);
         modelTokens.forEach(token => {
             var populationConfig = _config[token];
-            if (!populationConfig.useValue && !populationConfig.useClass) {
-                throw new Error('one of useValue or useClass must contain type PopulationConfig')
-            }
-            else if (!populationConfig.size || populationConfig.size < 0) {
-                if (populationConfig.useClass) {
-                    agentsMap.set(token, new populationConfig.useClass())
-                }
-                else if (populationConfig.useValue) {
-                    agentsMap.set(token, populationConfig.useValue);
-                }
-            }
-            else {
-                if (populationConfig.useClass) {
-                    agentsMap.set(token, new Population(populationConfig.useClass, populationConfig.size))
-                }
-            }
+            agentsMap.set(token, populationConfig);
         });
         return class extends constructor {
             htmodel = agentsMap;
         };
-    }
-}
-
-export function DefinePopulation <T extends IAgent>(_constr: { new(...args: any[]): T }, _initialNumber: number = 100): typeof Population<T> {
-    return class extends Population<T> implements IPopulation<T> {
-        constructor() {
-            super(_constr, _initialNumber)
-        }
-    }
-}
-
-export function PopulationDefinition(_initialNumber: number = 100) {
-    return function <T extends IAgent>(_constr: { new(): T }) {
-        return class extends Population<T> {
-            constructor() {
-                super(_constr, _initialNumber)
-            }
-        }
     }
 }
 

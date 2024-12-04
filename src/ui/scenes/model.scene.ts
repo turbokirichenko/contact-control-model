@@ -26,7 +26,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this.height = parentHeight;
 
         this._cows = this._model.getPopulation(COW_TOKEN)! as IPopulation<CowInterface>;
-        this._virus = this._model.getInstance<Virus>(VIRUS_TOKEN)! as Virus;
+        this._virus = this._model.getOne<Virus>(VIRUS_TOKEN)! as Virus;
 
         if (this._cows) {
             console.log(this._cows)
@@ -55,9 +55,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
 
     update(_framesPassed: number): void {
         if (Math.floor(this.secondCounter/(60*60)) >= 12) return;
-        console.log('ok');
         for (let i = 0; i < X_SCORE; ++i) {
-            this.secondCounter++;
             this._model.tick();
             this._cows?.forEach((cow, index) => {
                 const vect = cow.getPosition();
@@ -87,7 +85,6 @@ export class ModelScene extends PixiContainer implements SceneInterface {
                 virus.position.y = vect?.y ?? 0;
             });
         }
-
         this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min`
     }
 
