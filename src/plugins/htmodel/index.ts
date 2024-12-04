@@ -1,7 +1,5 @@
 // --------------------------------
 export interface IAgent {
-    population?: IPopulation<any>;
-    setup(model?: IModel): void | Promise<void>;
     tick(): void;
 }
 
@@ -25,7 +23,7 @@ export interface ModelConfig {
 
 export interface PopulationConfig {
     useValue?: IAgent;
-    useClass?: new () => IAgent;
+    useClass?: new (...args: any[]) => IAgent;
     size?: number;
 }
 
@@ -35,37 +33,28 @@ export interface IModelMap extends Map<string, IPopulation<IAgent>> {};
 class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
     constructor(model: IModel, constr: { new(...args: any[]): T },     initialNumber?: number);
     constructor(model: IModel, value: T,                               initialNumber?: number);
-    constructor(private readonly _model: IModel, constr: { new(...args: any[]): T } | T, initialNumber: number = 100) {
+    constructor(private readonly _model: IModel, constr: { new(...args: any[]): T } | T, initialNumber: number = 1) {
         super();
+        this.token = 0
         this._constr = constr as { new (...args: any[]): T };
         for (let i = 0; i < initialNumber; ++i) {
             this.add();
         }
     }
-    public population?: IPopulation<Population<T>> | undefined;
+    public token;
     private _constr?: { new(...args: any[]): T };
     private _value?: T;
     public get size() { return this.length }
-    public setup(model?: IModel) {
-        this.forEach(agent => {
-            agent.setup(model)
-        });
-    }
     public tick() {
         this.forEach(agent => {
             agent.tick();
         });
     }
     public push(agent: T) {
-        if (agent.population) {
-            throw new Error('Impossible to set population to the agent that already in any population');
-        }
-        agent.population = this;
         return super.push(agent);
     }
     public add() {
         var agent = this._fabric();
-        agent.population = this;
         super.push(agent);
         return agent;
     }
@@ -90,11 +79,6 @@ class Model implements IModel {
         });
     }
     public playUntil() { return true };
-    public async setup() {
-        this._agents.forEach(agent => {
-            agent.setup(this);
-        });
-    }
     public getInstance<T extends IAgent>(token: string): IPopulation<T> {
         if (this._map.has(token)) {
             return this._map.get(token)! as IPopulation<T>;

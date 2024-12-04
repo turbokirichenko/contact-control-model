@@ -1,7 +1,8 @@
 import { IAgent } from "../../plugins/htmodel";
 import { Vector2dInterface } from "../math/vector2d";
 
-export interface CowInterface extends IAgent {
+export interface ICow extends IAgent {
+    uid: number;
     width: number;
     height: number;
     speed: number;

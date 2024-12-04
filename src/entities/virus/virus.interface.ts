@@ -12,3 +12,14 @@ export interface VirusInterface<T extends IAgent> extends IAgent {
     trySpread(): boolean;
     spread(key: number, infected: T): void;
 }
+
+export interface IVirus<T extends IAgent> extends IAgent {
+    infected: T | null;
+    period: 'none' | 'incubation' | 'ill'
+    radius: number;
+    incubationPeriod: number;
+    spreadProbability: number;
+    killProbability: number;
+    spread(): void;
+    infect(to: T): void;
+}

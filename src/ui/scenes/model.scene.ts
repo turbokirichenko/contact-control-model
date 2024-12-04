@@ -1,20 +1,20 @@
-import { CowInterface, COW_TOKEN } from "../../entities/cow";
-import { Virus } from "../../entities/virus";
+import { ICow, COW_TOKEN } from "../../entities/cow";
+import { IVirus, Virus } from "../../entities/virus";
 import { VIRUS_TOKEN } from "../../entities/virus/virus.impl";
 import { PixiContainer,PixiGraphics, PixiText } from "../../plugins/engine";
 import { Manager, SceneInterface } from "../../plugins/engine/manager";
 import { IModel, IPopulation } from "../../plugins/htmodel";
 
-const X_SCORE = 20;
+const X_SCORE = 10;
+const X_SCALE = 4;
 
 export class ModelScene extends PixiContainer implements SceneInterface {
 
     private _cowContainers: PixiContainer[] = [];
     private _text: PixiText = new PixiText({ text: 'time passed: ', style: { fontSize: '24px', fill: 'red' }});
-    private _virusContainers: Map<number, PixiContainer> = new Map();
     private secondCounter = 0;
-    private _virus?: Virus;
-    private _cows?: IPopulation<CowInterface>;
+    private _virus?: IPopulation<IVirus<ICow>>;
+    private _cows?: IPopulation<ICow>;
 
     constructor(private readonly _model: IModel) {
         super();
@@ -25,15 +25,14 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this.width = parentWidth;
         this.height = parentHeight;
 
-        this._cows = this._model.getPopulation(COW_TOKEN)! as IPopulation<CowInterface>;
-        this._virus = this._model.getOne<Virus>(VIRUS_TOKEN)! as Virus;
+        this._cows = this._model.getInstance<ICow>(COW_TOKEN)!;
+        this._virus = this._model.getInstance<IVirus<ICow>>(VIRUS_TOKEN)!;
 
         if (this._cows) {
             this._cows.forEach(cow => {
-                console.log('1')
                 const cowRect = new PixiGraphics();
                 cowRect
-                    .rect(-cow.width/2, -cow.height/2, cow.width, cow.height)
+                    .rect(-cow.width/2*X_SCALE, -cow.height/2*X_SCALE, cow.width*X_SCALE, cow.height*X_SCALE)
                     .fill('brown');
                 const cowContainer = new PixiContainer();
                 cowContainer.addChild(cowRect);
@@ -58,33 +57,12 @@ export class ModelScene extends PixiContainer implements SceneInterface {
             this._model.tick();
             this._cows?.forEach((cow, index) => {
                 const vect = cow.getPosition();
-                this._cowContainers[index].position.x = vect.x;
-                this._cowContainers[index].position.y = vect.y;
+                this._cowContainers[index].position.x = vect.x*X_SCALE;
+                this._cowContainers[index].position.y = vect.y*X_SCALE;
                 this._cowContainers[index].rotation = cow.getDirection();
-            })
-            this._virus?.infected.forEach((_, key) => {
-                if (!this._virusContainers.has(key)) {
-                    const greenCircle = new PixiGraphics();
-                    greenCircle
-                        .circle(
-                            0, 
-                            0, 
-                            this._virus?.infectionRadius ?? 0
-                        )
-                        .fill('green');
-                    greenCircle.alpha = 0.5;
-                    const container = new PixiContainer().addChild(greenCircle);
-                    this._virusContainers.set(key, container);
-                    this.addChild(container);
-                }
-            });
-            this._virusContainers.forEach((virus, key) => {
-                const vect = this._cows?.[key]?.getPosition();
-                virus.position.x = vect?.x ?? 0;
-                virus.position.y = vect?.y ?? 0;
             });
         }
-        this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min`
+        this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min, ${this._virus?.size}`
     }
 
     resize(_parentWidth: number, _parentHeight: number): void {}

@@ -1,60 +1,69 @@
-import { VirusInterface, VirusState } from "./virus.interface";
-import { CowInterface } from "../cow";
+import { IVirus } from "./virus.interface";
+import { ICow } from "../cow";
 import { IModel } from "../../plugins/htmodel";
-import { Cow, COW_TOKEN } from "../cow";
+import { COW_TOKEN } from "../cow";
 import { IPopulation } from "../../plugins/htmodel";
 
 export const VIRUS_TOKEN = 'virus';
 
-export class VirusImpl implements VirusInterface<CowInterface> {
-
-    public infected: Map<number, CowInterface> = new Map();
-    public infectionRadius: number;
-    public incubationEffect: number;
+export class Virus implements IVirus<ICow> {
+    public infected: ICow | null;
+    public radius: number;
+    public incubationPeriod: number;
     public spreadProbability: number;
     public killProbability: number;
-    public state: VirusState;
+    public period: "none" | "incubation" | "ill";
+    private readonly _cows: IPopulation<ICow>;
 
     constructor(private readonly _model: IModel) {
-        const cows = this._model.getPopulation(COW_TOKEN) as IPopulation<Cow>;
-        if (cows) {
-            const infectedIndex = Math.floor(Math.random()*cows.size);
-            const infected = cows[infectedIndex] as CowInterface;
-            this.infected.set(infectedIndex, infected);
-        }
-        this.infectionRadius = 10;
+        this.infected = null;
+        this.radius = 2;
+        this.incubationPeriod = 20*60;
+        this.killProbability = 0.001;
         this.spreadProbability = 0.001;
-        this.incubationEffect = 12*60*60;
-        this.killProbability = 0.01;
-        this.state = 'none';
+        this.period = 'none';
+        this._cows = this._model.getInstance<ICow>(COW_TOKEN);
     }
-    
-    public trySpread(): boolean {
-        this.infected.forEach((infects) => {
-            const cows = this.searchCowsOnArea(infects);
-            cows.map(([key, cow ]) => {
+
+    public setup() {}
+
+    public tick() {
+        this.spread();
+    }
+
+    public infect(to: ICow): void {
+        if (this.infected) {
+            return;
+        }
+        this.infected = to;
+    } 
+
+    public spread(): void {
+        if (this.infected) {
+            var cows = this._seekInRadius(this.infected);
+            cows.forEach((cow) => {
                 if (Math.random() < this.spreadProbability) {
-                    this.spread(key, cow);
+                    var viruses = this._model.getInstance<Virus>(VIRUS_TOKEN);
+                    for (let i = 0; i < viruses?.size; ++i) {
+                        if (cow === viruses[i].infected) {
+                            return;
+                        }
+                    }
+                    var virus = viruses.add();
+                    virus.infect(cow);
                 }
             });
-        });
-        return false;
+        }
     }
-    public spread(key: number, infected: CowInterface): void {
-        this.infected.set(key, infected);
-    }
-    public setup() {}
-    public tick() {
-        this.trySpread();
-    }
-    private searchCowsOnArea(infected: CowInterface): [number, CowInterface][] {
-        const coord = infected.getPosition();
-        const cows = infected.population as IPopulation<Cow>;
+
+    private _seekInRadius(infected: ICow): Array<ICow> {
+        var coord = infected.getPosition();
+        var cows = this._cows;
         if (cows) {
-            const radiusCows: [number, CowInterface][] = [];
+            const radiusCows: ICow[] = [];
             for (let i = 0; i < cows.size; ++i) {
-                if (cows[i].getPosition().calcInterval(coord) < this.infectionRadius) {
-                    radiusCows.push([i, cows[i]]);
+                if (cows[i].getPosition().calcInterval(coord) < this.radius) {
+                    radiusCows.push(cows[i]);
                 }
             }
             return radiusCows;

@@ -1,23 +1,24 @@
-import { IModel, IPopulation } from "../../plugins/htmodel";
+import { IModel } from "../../plugins/htmodel";
 import { FarmInterface, FARM_TOKEN } from "../farm";
 import { Vector2dInterface, Vector2d } from "../math/vector2d";
-import { CowInterface } from "./cow.interface";
+import { ICow } from "./cow.interface";
 
-const COW_DEFAULT_WIDTH = 0.84*4;
-const COW_DEFAULT_HEIGHT = 1.96*4;
+const COW_DEFAULT_WIDTH = 0.84;
+const COW_DEFAULT_HEIGHT = 1.96;
 const COW_DEFAULT_SPEED = 2;
-const WAITING_TIME = 60;
+const WAITING_TIME = 60*20;
 
 export type CowMode = 'move' | 'rest' | 'wait';
 
 export const COW_TOKEN = 'cow';
 
-export class Cow implements CowInterface {
+export class Cow implements ICow {
+    static count = 0;
+    public readonly uid: number;
     public width: number;
     public height: number;
     public speed: number;
     public force: number;
-    public population?: IPopulation<CowInterface>
 
     private _farm?: FarmInterface;
     private _position: Vector2dInterface = new Vector2d(0, 0);
@@ -27,11 +28,22 @@ export class Cow implements CowInterface {
     private _timer: number = 0;
 
     constructor(private readonly _model: IModel) {
+        this.uid = Cow.count++;
         this._farm = this._model.getOne<FarmInterface>(FARM_TOKEN);
         this.width = COW_DEFAULT_WIDTH;
         this.height = COW_DEFAULT_HEIGHT;
         this.speed = COW_DEFAULT_SPEED;
         this.force = Math.random()*1000;
+        if (this._farm) {
+            var farm = this._farm;
+            var posX = farm.position.x + Math.random()*(farm.width)
+            var posY = farm.position.y + Math.random()*(farm.height);
+            var vPosX = farm.position.x + Math.random()*(farm.width)
+            var vPosY = farm.position.y + Math.random()*(farm.height);
+            [this._position.x, this._position.y] = [posX, posY];
+            [this._destinationPoint.x, this._destinationPoint.y] = [vPosX, vPosY];
+            this.wait();
+        }
     }
 
     public tick(): void {
@@ -49,30 +61,20 @@ export class Cow implements CowInterface {
                 this._position.x -= deltaVector.x;
                 this._position.y -= deltaVector.y;
             } else {
-                this._timer = 0;
-                this._waitingTime = WAITING_TIME*15 + WAITING_TIME*Math.random()*10;
                 this.wait();
             }
         }
     }
 
-    public setup(): void {
-        if (!this._farm) return;
-        var farm = this._farm;
-        var posX = farm.position.x + Math.random()*(farm.width)
-        var posY = farm.position.y + Math.random()*(farm.height);
-        var vPosX = farm.position.x + Math.random()*(farm.width)
-        var vPosY = farm.position.y + Math.random()*(farm.height);
-        [this._position.x, this._position.y] = [posX, posY];
-        [this._destinationPoint.x, this._destinationPoint.y] = [vPosX, vPosY];
-        this.go();
-    }
+    public setup(): void {}
 
     public go(): void {
         this._mode = 'move';
     }
 
     public wait(): void {
+        this._timer = 0;
+        this._waitingTime = WAITING_TIME*Math.random();
         this._mode = 'wait';
     }
 
