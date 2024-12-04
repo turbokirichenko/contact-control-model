@@ -29,7 +29,6 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this._virus = this._model.getOne<Virus>(VIRUS_TOKEN)! as Virus;
 
         if (this._cows) {
-            console.log(this._cows)
             this._cows.forEach(cow => {
                 console.log('1')
                 const cowRect = new PixiGraphics();
@@ -43,7 +42,6 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         }
 
         if(this._cowContainers.length) {
-            console.log('added')
             this.addChild(...this._cowContainers);
         }
 
@@ -56,6 +54,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     update(_framesPassed: number): void {
         if (Math.floor(this.secondCounter/(60*60)) >= 12) return;
         for (let i = 0; i < X_SCORE; ++i) {
+            this.secondCounter++;
             this._model.tick();
             this._cows?.forEach((cow, index) => {
                 const vect = cow.getPosition();
