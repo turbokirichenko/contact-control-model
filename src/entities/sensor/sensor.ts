@@ -1,21 +1,8 @@
-import { IModel } from "../../plugins/htmodel";
+import { IAgent, IModel } from "../../plugins/htmodel";
 import { ICow } from "../cow";
-import { DecodedSignal, InputDevice, SensorInterface, StreamDevice } from "./sensor.interface";
+import { DecodedSignal } from "./sensor.interface";
 
-export class Sensor implements SensorInterface {
-    public inputDevice: InputDevice = {
-        scan: () => {
-            return {
-                uid: '',
-                date: new Date()
-            }
-        }
-    }
-    public streamDevice: StreamDevice = {
-        stream: () => {
-            return true;
-        }
-    }
+export class Sensor implements IAgent {
     public uid: string;
     public storage: DecodedSignal[] = [];
 

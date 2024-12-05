@@ -24,7 +24,7 @@ var cowPConfig: PresentationConfig<PixiGraphics, ICow> = {
     token: COW_TOKEN,
     graphic: () => {
         var cowG = new PixiGraphics();
-        return cowG.rect(-1/2, -1, 1, 2).fill('brown');
+        return cowG.rect(-1/2, -1, 1, 2).fill('gray');
     },
     position: (cow: ICow) => ({
         x: (cow.getPosition().x ?? 0)*X_SCALE,

@@ -17,7 +17,7 @@ export class VirusSpawner implements IAgent {
 
         for (let i = 0; i < this.initialSpawn; ++i) {
             var virus = this._viruses.add();
-            var cow = this._cows[Math.floor(Math.random()*100)];
+            var cow = this._cows[Math.floor(Math.random()*this._cows.size)];
             virus.infect(cow);
         }
     }

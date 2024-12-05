@@ -13,7 +13,7 @@ export type CowMode = 'move' | 'rest' | 'wait';
 export const COW_TOKEN = 'cow';
 
 export class Cow implements ICow {
-    static count = 0;
+    private static count = 0;
     public readonly uid: number;
     public width: number;
     public height: number;
@@ -27,8 +27,7 @@ export class Cow implements ICow {
     private _waitingTime: number = WAITING_TIME;
     private _timer: number = 0;
 
-    constructor(private readonly _model: IModel, private readonly _population: IPopulation<ICow>) {
-        console.log(this._population);
+    constructor(private readonly _model: IModel) {
         this.uid = Cow.count++;
         this._farm = this._model.getOne<FarmInterface>(FARM_TOKEN);
         this.width = COW_DEFAULT_WIDTH;
@@ -66,8 +65,6 @@ export class Cow implements ICow {
             }
         }
     }
-
-    public setup(): void {}
 
     public go(): void {
         this._mode = 'move';
