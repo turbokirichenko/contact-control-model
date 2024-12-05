@@ -1,20 +1,22 @@
-import { ICow, COW_TOKEN } from "../../entities/cow";
-import { IVirus, Virus } from "../../entities/virus";
-import { VIRUS_TOKEN } from "../../entities/virus/virus.impl";
 import { PixiContainer,PixiGraphics, PixiText } from "../../plugins/engine";
 import { Manager, SceneInterface } from "../../plugins/engine/manager";
-import { IModel, IPopulation } from "../../plugins/htmodel";
+import { IAgent, IModel, PresentationConfig } from "../../plugins/htmodel";
+import { X_SCORE, X_SCALE, presentationConfig } from "../../shared/config/presentation.config";
 
-const X_SCORE = 10;
-const X_SCALE = 4;
+class AgentPresentation<T extends IAgent> extends PixiContainer {
+    constructor(public config: PresentationConfig<PixiGraphics, T>) {
+        super();
+        this.scale = X_SCALE;
+        this.addChild(config.graphic());
+    }
+}
 
 export class ModelScene extends PixiContainer implements SceneInterface {
 
-    private _cowContainers: PixiContainer[] = [];
+    private _containersMap: Map<string, AgentPresentation<IAgent>[]> = new Map();
+    private _presentation: PresentationConfig<PixiGraphics, any>[];
     private _text: PixiText = new PixiText({ text: 'time passed: ', style: { fontSize: '24px', fill: 'red' }});
     private secondCounter = 0;
-    private _virus?: IPopulation<IVirus<ICow>>;
-    private _cows?: IPopulation<ICow>;
 
     constructor(private readonly _model: IModel) {
         super();
@@ -25,24 +27,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this.width = parentWidth;
         this.height = parentHeight;
 
-        this._cows = this._model.getInstance<ICow>(COW_TOKEN)!;
-        this._virus = this._model.getInstance<IVirus<ICow>>(VIRUS_TOKEN)!;
-
-        if (this._cows) {
-            this._cows.forEach(cow => {
-                const cowRect = new PixiGraphics();
-                cowRect
-                    .rect(-cow.width/2*X_SCALE, -cow.height/2*X_SCALE, cow.width*X_SCALE, cow.height*X_SCALE)
-                    .fill('brown');
-                const cowContainer = new PixiContainer();
-                cowContainer.addChild(cowRect);
-                this._cowContainers.push(cowContainer);
-            });
-        }
-
-        if(this._cowContainers.length) {
-            this.addChild(...this._cowContainers);
-        }
+        this._presentation = [...presentationConfig];
 
         this._text.position.x = parentWidth/2;
         this._text.position.y = parentHeight/2;
@@ -51,18 +36,46 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     }
 
     update(_framesPassed: number): void {
-        if (Math.floor(this.secondCounter/(60*60)) >= 12) return;
         for (let i = 0; i < X_SCORE; ++i) {
             this.secondCounter++;
             this._model.tick();
-            this._cows?.forEach((cow, index) => {
-                const vect = cow.getPosition();
-                this._cowContainers[index].position.x = vect.x*X_SCALE;
-                this._cowContainers[index].position.y = vect.y*X_SCALE;
-                this._cowContainers[index].rotation = cow.getDirection();
+
+            this._presentation.map(slide => {
+                var population = this._model.getInstance(slide.token);
+                if (!this._containersMap.has(slide.token)) {
+                    this._containersMap.set(slide.token, []);
+                }
+                var containers = this._containersMap.get(slide.token);
+                if (containers && population.size > containers.length) {
+                    var insertSize = population.size - containers?.length;
+                    if (insertSize === 0) {
+                        return;
+                    }
+                    var insertContainers = Array(insertSize).fill(0).map(_ => {
+                        const cowContainer = new AgentPresentation(slide);
+                        return cowContainer;
+                    });
+                    if (insertContainers.length) {
+                        this.addChild(...insertContainers);
+                        containers.push(...insertContainers);
+                    };
+                }
+                if (containers) {
+                    containers.map((container, index) => {
+                        container.renderable = false;
+                        if (population[index]) {
+                            var agent = population[index];
+                            var vect = container.config.position(agent);
+                            var dirc = container.config.direction(agent);
+                            container.position.set(vect.x, vect.y);
+                            container.rotation = dirc ?? container.rotation;
+                            container.renderable = true;
+                        }
+                    })
+                }
             });
         }
-        this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min, ${this._virus?.size}`
+        this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min`
     }
 
     resize(_parentWidth: number, _parentHeight: number): void {}

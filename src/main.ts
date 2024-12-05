@@ -33,6 +33,7 @@ const boostsrap = async () => {
     Manager.changeScene(loaderScene);
     loader.download(options, loaderScene.progressCallback.bind(loaderScene)).then(() => {
         const model = ModelFactory.create(AppModel);
+        model.setup();
         const scene = new ModelScene(model);
         Manager.changeScene(scene);
     });

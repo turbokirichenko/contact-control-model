@@ -20,7 +20,7 @@ export class Virus implements IVirus<ICow> {
         this.radius = 2;
         this.incubationPeriod = 20*60;
         this.killProbability = 0.001;
-        this.spreadProbability = 0.001;
+        this.spreadProbability = 0.1;
         this.period = 'none';
         this._cows = this._model.getInstance<ICow>(COW_TOKEN);
     }
