@@ -8,10 +8,13 @@ export interface IPopulation<T extends IAgent> extends IAgent {
     get size(): number;
     push(agent: T): number;
     add(): T;
+    remove(agent: T): T | undefined;
+    remove(index: number): T | undefined;
     forEach(callbackfn: (value: T, index: number, array: T[]) => void, thisArg?: any): void
 }
 
 export interface IModel extends IAgent {
+    setup(): void;
     getInstance<T extends IAgent>(token: string): IPopulation<T>;
     getPopulation<T extends IPopulation<IAgent>>(token: string): T | undefined;
     getOne<T extends IAgent>(token: string, index?: number): T | undefined;
@@ -25,6 +28,13 @@ export interface PopulationConfig {
     useValue?: IAgent;
     useClass?: new (...args: any[]) => IAgent;
     size?: number;
+}
+
+export interface PresentationConfig<V, T extends IAgent> {
+    token: string;
+    graphic: () => V;
+    position: (target: T) => { x: number, y: number };
+    direction: (target: T) => number | undefined;
 }
 
 export interface IAgentMap extends Map<string, PopulationConfig> {};
@@ -58,35 +68,51 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
         super.push(agent);
         return agent;
     }
+    public remove(agent: T | number): T | undefined {
+        var seekIndex = typeof agent === "number" 
+            ? agent 
+            : this.seek(agent);
+        if (seekIndex) {
+            return this.splice(seekIndex, 1)[0];
+        }
+        return undefined;
+    }
     public forEach = super.forEach;
     private _fabric(): T {
         if (this._constr) {
-            return new this._constr(this._model) as T;
+            return new this._constr(this._model, this) as T;
         } else {
             return this._value as T;
         }
     }
+    private seek(agent: T): number | undefined {
+        var seekIndex;
+        this.forEach((check, index) => {
+            if (check === agent) {
+                seekIndex = index;
+            }
+        });
+        return seekIndex;
+    }
 }
 
 class Model implements IModel {
-    private readonly _agents: IAgent[] = [];
-    private readonly _map: IModelMap;
-    constructor(private readonly _gap: IAgentMap) {
+    private _map: IModelMap;
+    constructor(private readonly _raw: IAgentMap) {
         this._map = new Map<string, IPopulation<IAgent>>();
-        this._gap.forEach((_, key)=> {
-            const agent = this.getInstance(key);
-            this._agents.push(agent);
-        });
     }
-    public playUntil() { return true };
+    public setup() {
+        this._clear();
+        this._setup();
+    }
     public getInstance<T extends IAgent>(token: string): IPopulation<T> {
         if (this._map.has(token)) {
             return this._map.get(token)! as IPopulation<T>;
         } else {
-            if (!this._gap.has(token)) {
+            if (!this._raw.has(token)) {
                 throw new Error('a token is not exist in the scope');
             }
-            const config = this._gap.get(token);
+            const config = this._raw.get(token);
             if (config && config.useClass) {
                 this._map.set(token, new Population(this, config.useClass, config.size))
                 return this._map.get(token)! as IPopulation<T>;
@@ -101,8 +127,19 @@ class Model implements IModel {
         return (this.getInstance<T>(token) as IPopulation<T>)[index] as T;
     }
     public tick() {
-        this._agents.map(agent => {
+        this._map.forEach(agent => {
             agent.tick();
+        });
+    }
+
+    private _clear() {
+        this._map = new Map<string, IPopulation<IAgent>>();
+    }
+    private _setup() {
+        this._raw.forEach((config, token) => {
+            if (config && config.useClass) {
+                this._map.set(token, new Population(this, config.useClass, config.size));
+            }
         });
     }
 }

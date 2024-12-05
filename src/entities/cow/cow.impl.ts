@@ -1,4 +1,4 @@
-import { IModel } from "../../plugins/htmodel";
+import { IModel, IPopulation } from "../../plugins/htmodel";
 import { FarmInterface, FARM_TOKEN } from "../farm";
 import { Vector2dInterface, Vector2d } from "../math/vector2d";
 import { ICow } from "./cow.interface";
@@ -13,7 +13,7 @@ export type CowMode = 'move' | 'rest' | 'wait';
 export const COW_TOKEN = 'cow';
 
 export class Cow implements ICow {
-    static count = 0;
+    private static count = 0;
     public readonly uid: number;
     public width: number;
     public height: number;
@@ -65,8 +65,6 @@ export class Cow implements ICow {
             }
         }
     }
-
-    public setup(): void {}
 
     public go(): void {
         this._mode = 'move';
