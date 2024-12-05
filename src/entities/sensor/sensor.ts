@@ -1,5 +1,5 @@
 import { IModel } from "../../plugins/htmodel";
-import { CowInterface } from "../cow";
+import { ICow } from "../cow";
 import { DecodedSignal, InputDevice, SensorInterface, StreamDevice } from "./sensor.interface";
 
 export class Sensor implements SensorInterface {
@@ -19,7 +19,7 @@ export class Sensor implements SensorInterface {
     public uid: string;
     public storage: DecodedSignal[] = [];
 
-    constructor(public _depends?: CowInterface) {
+    constructor(public _depends?: ICow) {
         this.uid = (Math.random()*1e8).toString(16);
     }
     public setup(_model: IModel) {}

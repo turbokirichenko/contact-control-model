@@ -1,3 +1,4 @@
+import { COW_TOKEN } from "../../entities/cow";
 import { PixiContainer,PixiGraphics, PixiText } from "../../plugins/engine";
 import { Manager, SceneInterface } from "../../plugins/engine/manager";
 import { IAgent, IModel, PresentationConfig } from "../../plugins/htmodel";
@@ -75,7 +76,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
                 }
             });
         }
-        this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min`
+        this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min, cow size: ${this._model.getInstance(COW_TOKEN).size}`
     }
 
     resize(_parentWidth: number, _parentHeight: number): void {}

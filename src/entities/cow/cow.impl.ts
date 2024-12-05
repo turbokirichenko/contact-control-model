@@ -1,4 +1,4 @@
-import { IModel } from "../../plugins/htmodel";
+import { IModel, IPopulation } from "../../plugins/htmodel";
 import { FarmInterface, FARM_TOKEN } from "../farm";
 import { Vector2dInterface, Vector2d } from "../math/vector2d";
 import { ICow } from "./cow.interface";
@@ -27,7 +27,8 @@ export class Cow implements ICow {
     private _waitingTime: number = WAITING_TIME;
     private _timer: number = 0;
 
-    constructor(private readonly _model: IModel) {
+    constructor(private readonly _model: IModel, private readonly _population: IPopulation<ICow>) {
+        console.log(this._population);
         this.uid = Cow.count++;
         this._farm = this._model.getOne<FarmInterface>(FARM_TOKEN);
         this.width = COW_DEFAULT_WIDTH;
