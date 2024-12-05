@@ -8,6 +8,8 @@ export interface IPopulation<T extends IAgent> extends IAgent {
     get size(): number;
     push(agent: T): number;
     add(): T;
+    remove(agent: T): T | undefined;
+    remove(index: number): T | undefined;
     forEach(callbackfn: (value: T, index: number, array: T[]) => void, thisArg?: any): void
 }
 
@@ -66,13 +68,31 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
         super.push(agent);
         return agent;
     }
+    public remove(agent: T | number): T | undefined {
+        var seekIndex = typeof agent === "number" 
+            ? agent 
+            : this.seek(agent);
+        if (seekIndex) {
+            return this.splice(seekIndex, 1)[0];
+        }
+        return undefined;
+    }
     public forEach = super.forEach;
     private _fabric(): T {
         if (this._constr) {
-            return new this._constr(this._model) as T;
+            return new this._constr(this._model, this) as T;
         } else {
             return this._value as T;
         }
+    }
+    private seek(agent: T): number | undefined {
+        var seekIndex;
+        this.forEach((check, index) => {
+            if (check === agent) {
+                seekIndex = index;
+            }
+        });
+        return seekIndex;
     }
 }
 
