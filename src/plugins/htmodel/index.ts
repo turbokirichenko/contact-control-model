@@ -30,13 +30,6 @@ export interface PopulationConfig {
     size?: number;
 }
 
-export interface PresentationConfig<V, T extends IAgent> {
-    token: string;
-    graphic: () => V;
-    position: (target: T) => { x: number, y: number };
-    direction: (target: T) => number | undefined;
-}
-
 export interface IAgentMap extends Map<string, PopulationConfig> {};
 export interface IModelMap extends Map<string, IPopulation<IAgent>> {};
 
