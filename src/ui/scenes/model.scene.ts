@@ -1,8 +1,8 @@
 import { COW_TOKEN } from "../../entities/cow";
-import { PixiContainer,PixiGraphics, PixiText } from "../../plugins/engine";
+import { PixiContainer,PixiGraphics, PixiText, PixiTexture, PixiTilingSprite } from "../../plugins/engine";
 import { Manager, SceneInterface } from "../../plugins/engine/manager";
-import { IAgent, IModel, PresentationConfig } from "../../plugins/htmodel";
-import { X_SCORE, X_SCALE, presentationConfig } from "../../shared/config/presentation.config";
+import { IAgent, IModel } from "../../plugins/htmodel";
+import { X_SCORE, X_SCALE, presentationConfig, PresentationConfig } from "../../shared/config/presentation.config";
 import { GUIBarContainer } from "../containers/gui-bar.container";
 
 class AgentPresentation<T extends IAgent> extends PixiContainer {
@@ -13,6 +13,9 @@ class AgentPresentation<T extends IAgent> extends PixiContainer {
     }
 }
 
+const PLATO_DEFAULT_SIZE = 2000;
+const PLATO_SOURCE_SIZE = 64;
+
 export class ModelScene extends PixiContainer implements SceneInterface {
 
     private _containersMap: Map<string, AgentPresentation<IAgent>[]> = new Map();
@@ -21,11 +24,11 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     private _gui: PixiContainer & SceneInterface;
     private _screen: PixiContainer;
     private secondCounter = 0;
-    private _mode: 'move' | 'down' | 'none' = 'none'
     private _target: any = null;
 
     constructor(private readonly _model: IModel) {
         super();
+        this.interactive = true;
         this.position.x = 0;
         this.position.y = 0;
         const parentWidth = Manager.width;
@@ -39,39 +42,28 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this._text.position.y = parentHeight/2;
         this._text.anchor = 0.5;
         this._gui = new GUIBarContainer();
-        this._screen = new PixiContainer();
-        const cont = new PixiGraphics({alpha: 0});
-        cont.rect(0, 0, parentWidth, parentHeight).fill(0x000000);
-        this._screen.addChild(cont);
-        this._screen.interactive = true;
-        this.interactive = true;
-        const onMove = (event: PointerEvent) => {
-            if (this._target) {
-                var [x, y] = [this._target.position.x, this._target.position.y]
-                this._target.position.set(
-                    x + event.movementX,
-                    y + event.movementY,
-                );
-            }
-        }
-        const onEnd = () => {
-            if (this._target) {
-                this.off('pointermove', onMove);
-                this._target.alpha = 1;
-                this._target = null;
-            }
-        }
-        const onStart = () => {
-            this._mode = 'move';
-            this._target = this._screen;
-            this._target.alpha = 0.5;
-            this.on("pointermove", onMove);
-        }
-        this._screen.on("pointerdown",  onStart, this._screen);
-        this.on('pointerup', onEnd);
-        this.on('pointerupoutside', onEnd);
 
-        this.addChild(this._gui, this._text, this._screen);
+        this._screen = new PixiContainer();
+        this._screen.interactive = true;
+        const bg_texture = PixiTexture.from('pattern');
+        bg_texture.source.width = PLATO_SOURCE_SIZE;
+        bg_texture.source.height = PLATO_SOURCE_SIZE;
+        bg_texture.update()
+        const plato = new PixiTilingSprite({
+            texture: bg_texture,
+            width: PLATO_DEFAULT_SIZE,
+            height: PLATO_DEFAULT_SIZE
+        });
+        plato.anchor = 0.5;
+        plato.position.set(parentWidth/2, parentHeight/2);
+        plato.alpha = 0.25;
+        this._screen.addChild(plato);
+
+        this._screen.on("pointerdown", this._onStart.bind(this), this._screen);
+        this.on('pointerup', this._onEnd.bind(this));
+        this.on('pointerupoutside', this._onEnd.bind(this));
+
+        this.addChild(this._screen, this._gui, this._text);
         this.resize(parentWidth, parentHeight);
     }
 
@@ -119,12 +111,32 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     }
 
     resize(_parentWidth: number, _parentHeight: number): void {
-        console.log('ok');
-        this._screen.width = Math.max(_parentWidth, _parentHeight);
-        this._screen.height = this._screen.height;
-        this._screen.position.set(0,0);
+        this._screen.position.set(0, 0);
         this._gui.resize(_parentWidth, _parentHeight);
         this._gui.position.x = _parentWidth - this._gui.width;
         this._gui.position.y = 0;
+    }
+
+    private _onMove(event: PointerEvent) {
+        if (this._target) {
+            var [x, y] = [this._target.position.x, this._target.position.y]
+            if (Math.abs(x + event.movementX) > 2000 || Math.abs(y + event.movementY) > 2000) {
+                return;
+            }
+            this._target.position.set(
+                x + event.movementX,
+                y + event.movementY,
+            );
+        }
+    }
+    private _onEnd() {
+        if (this._target) {
+            this.off('pointermove', this._onMove);
+            this._target = null;
+        }
+    }
+    private  _onStart() {
+        this._target = this._screen;
+        this.on("pointermove", this._onMove);
     }
 }

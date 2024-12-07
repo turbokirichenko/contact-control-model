@@ -17,6 +17,12 @@ export const options: LoaderOptions = {
                     "forklift-effect": "sound/forklift-effect.wav",
                     "sound-gif": "sound/sound-gif.gif"
                 }
+            },
+            {
+                name: "scene",
+                assets: {
+                    "pattern": "scene/pattern.png",
+                }
             }
         ]
     }
