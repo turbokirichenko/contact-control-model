@@ -1,14 +1,21 @@
-import { PresentationConfig } from "../../plugins/htmodel";
+import { IAgent } from "../../plugins/htmodel";
 import { PixiGraphics } from "../../plugins/engine";
 import type { ICow } from "../../entities/cow";
 import type { IVirus } from "../../entities/virus";
 import { COW_TOKEN } from "../../entities/cow";
 import { VIRUS_TOKEN } from "../../entities/virus/virus.impl";
 
+export interface PresentationConfig<V, T extends IAgent> {
+    token: string;
+    graphic: () => V;
+    position: (target: T) => { x: number, y: number };
+    direction: (target: T) => number | undefined;
+}
+
 export const X_SCALE = 4;
 export const X_SCORE = 1;
 
-var virusPConfig: PresentationConfig<PixiGraphics, IVirus<ICow>> = {
+const virusPConfig: PresentationConfig<PixiGraphics, IVirus<ICow>> = {
     token: VIRUS_TOKEN,
     graphic: () => {
         var virusG = new PixiGraphics({ alpha: 0.5 });
@@ -20,7 +27,7 @@ var virusPConfig: PresentationConfig<PixiGraphics, IVirus<ICow>> = {
     }),
     direction: () => undefined
 }
-var cowPConfig: PresentationConfig<PixiGraphics, ICow> = {
+const cowPConfig: PresentationConfig<PixiGraphics, ICow> = {
     token: COW_TOKEN,
     graphic: () => {
         var cowG = new PixiGraphics();
