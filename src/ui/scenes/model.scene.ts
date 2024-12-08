@@ -1,4 +1,5 @@
 import { COW_TOKEN } from "../../entities/cow";
+import { VIRUS_TOKEN } from "../../entities/virus";
 import { PixiContainer,PixiGraphics, PixiText, PixiTexture, PixiTilingSprite } from "../../plugins/engine";
 import { Manager, SceneInterface } from "../../plugins/engine/manager";
 import { IAgent, IModel } from "../../plugins/htmodel";
@@ -8,13 +9,12 @@ import { GUIBarContainer } from "../containers/gui-bar.container";
 class AgentPresentation<T extends IAgent> extends PixiContainer {
     constructor(public config: PresentationConfig<PixiGraphics, T>) {
         super();
-        this.scale = X_SCALE;
         this.addChild(config.graphic());
     }
 }
 
-const PLATO_DEFAULT_SIZE = 2000;
-const PLATO_SOURCE_SIZE = 64;
+const PLATO_DEFAULT_SIZE = 4000;
+const PLATO_SOURCE_SIZE = 32;
 
 export class ModelScene extends PixiContainer implements SceneInterface {
 
@@ -25,6 +25,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     private _screen: PixiContainer;
     private secondCounter = 0;
     private _target: any = null;
+    private _plato: PixiContainer;
 
     constructor(private readonly _model: IModel) {
         super();
@@ -55,13 +56,14 @@ export class ModelScene extends PixiContainer implements SceneInterface {
             height: PLATO_DEFAULT_SIZE
         });
         plato.anchor = 0.5;
-        plato.position.set(parentWidth/2, parentHeight/2);
-        plato.alpha = 0.25;
+        plato.alpha = 0.10;
+        this._plato = plato;
         this._screen.addChild(plato);
 
         this._screen.on("pointerdown", this._onStart.bind(this), this._screen);
         this.on('pointerup', this._onEnd.bind(this));
         this.on('pointerupoutside', this._onEnd.bind(this));
+        this._screen.scale = X_SCALE;
 
         this.addChild(this._screen, this._gui, this._text);
         this.resize(parentWidth, parentHeight);
@@ -71,43 +73,43 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         for (let i = 0; i < X_SCORE; ++i) {
             this.secondCounter++;
             this._model.tick();
-
-            this._presentation.map(slide => {
-                var population = this._model.getInstance(slide.token);
-                if (!this._containersMap.has(slide.token)) {
-                    this._containersMap.set(slide.token, []);
-                }
-                var containers = this._containersMap.get(slide.token);
-                if (containers && population.size > containers.length) {
-                    var insertSize = population.size - containers?.length;
-                    if (insertSize === 0) {
-                        return;
-                    }
-                    var insertContainers = Array(insertSize).fill(0).map(_ => {
-                        const cowContainer = new AgentPresentation(slide);
-                        return cowContainer;
-                    });
-                    if (insertContainers.length) {
-                        this._screen.addChild(...insertContainers);
-                        containers.push(...insertContainers);
-                    };
-                }
-                if (containers) {
-                    containers.map((container, index) => {
-                        container.renderable = false;
-                        if (population[index]) {
-                            var agent = population[index];
-                            var vect = container.config.position(agent);
-                            var dirc = container.config.direction(agent);
-                            container.position.set(vect.x, vect.y);
-                            container.rotation = dirc ?? container.rotation;
-                            container.renderable = true;
-                        }
-                    })
-                }
-            });
         }
-        this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min, cow size: ${this._model.getInstance(COW_TOKEN).size}`
+
+        this._presentation.map(slide => {
+            var population = this._model.getInstance(slide.token);
+            if (!this._containersMap.has(slide.token)) {
+                this._containersMap.set(slide.token, []);
+            }
+            var containers = this._containersMap.get(slide.token);
+            if (containers && population.size > containers.length) {
+                var insertSize = population.size - containers?.length;
+                if (insertSize === 0) {
+                    return;
+                }
+                var insertContainers = Array(insertSize).fill(0).map(_ => {
+                    const cowContainer = new AgentPresentation(slide);
+                    return cowContainer;
+                });
+                if (insertContainers.length) {
+                    this._screen.addChild(...insertContainers);
+                    containers.push(...insertContainers);
+                };
+            }
+            if (containers) {
+                containers.map((container, index) => {
+                    container.renderable = false;
+                    if (population[index]) {
+                        var agent = population[index];
+                        var vect = container.config.position(agent);
+                        var dirc = container.config.direction(agent);
+                        container.position.set(vect.x, vect.y);
+                        container.rotation = dirc ?? container.rotation;
+                        container.renderable = true;
+                    }
+                })
+            }
+        });
+        this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min, cows: ${this._model.getInstance(COW_TOKEN).size}, viruses: ${this._model.getInstance(VIRUS_TOKEN).size}`
     }
 
     resize(_parentWidth: number, _parentHeight: number): void {
@@ -115,6 +117,8 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this._gui.resize(_parentWidth, _parentHeight);
         this._gui.position.x = _parentWidth - this._gui.width;
         this._gui.position.y = 0;
+
+        this._plato.position.set((_parentWidth - this._gui.width)/2, (_parentHeight)/2);
     }
 
     private _onMove(event: PointerEvent) {
