@@ -1,5 +1,5 @@
-import { IModel, IPopulation } from "../../plugins/htmodel";
-import { FarmInterface, FARM_TOKEN } from "../farm";
+import { IModel } from "../../plugins/htmodel";
+import { IFarm, FARM_TOKEN } from "../farm";
 import { Vector2dInterface, Vector2d } from "../math/vector2d";
 import { ICow } from "./cow.interface";
 
@@ -20,7 +20,7 @@ export class Cow implements ICow {
     public speed: number;
     public force: number;
 
-    private _farm?: FarmInterface;
+    private _farm?: IFarm;
     private _position: Vector2dInterface = new Vector2d(0, 0);
     private _destinationPoint: Vector2dInterface = new Vector2d(0, 0);
     private _mode: CowMode = 'rest';
@@ -29,7 +29,7 @@ export class Cow implements ICow {
 
     constructor(private readonly _model: IModel) {
         this.uid = Cow.count++;
-        this._farm = this._model.getOne<FarmInterface>(FARM_TOKEN);
+        this._farm = this._model.getOne<IFarm>(FARM_TOKEN);
         this.width = COW_DEFAULT_WIDTH;
         this.height = COW_DEFAULT_HEIGHT;
         this.speed = COW_DEFAULT_SPEED;

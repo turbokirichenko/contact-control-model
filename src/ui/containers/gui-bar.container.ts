@@ -3,7 +3,7 @@ import { SceneInterface } from "../../plugins/engine/manager";
 
 const DEFAULT_WIDTH = 280;
 const DEFAULT_HEIGHT = 800;
-const DEFAULT_FILL = 0x999999;
+const DEFAULT_FILL = 0xb9b9b9;
 
 export class GUIBarContainer extends PixiContainer implements SceneInterface {
     private _graphic: PixiGraphics;

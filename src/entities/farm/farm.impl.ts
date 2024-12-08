@@ -1,13 +1,13 @@
 import { IModel } from "../../plugins/htmodel";
 import { Vector2d, Vector2dInterface } from "../math/vector2d";
-import { FarmInterface } from "./farm.interface";
+import { IFarm } from "./farm.interface";
 
 const FARM_DEFAULT_WIDTH = 150;
 const FARM_DEAFULT_HEIGHT = 150;
 
 export const FARM_TOKEN = 'farm';
 
-export class Farm implements FarmInterface {
+export class Farm implements IFarm {
     public width: number;
     public height: number;
     public position: Vector2dInterface

@@ -25,9 +25,18 @@ export interface ModelConfig {
 }
 
 export interface PopulationConfig {
+    token?: string;
     useValue?: IAgent;
     useClass?: new (...args: any[]) => IAgent;
     size?: number;
+    presentation?: { };
+}
+
+interface PresentationConfig<V, T extends IAgent> {
+    token: string;
+    graphic: () => V;
+    position: (target: T) => { x: number, y: number };
+    direction: (target: T) => number | undefined;
 }
 
 export interface IAgentMap extends Map<string, PopulationConfig> {};

@@ -8,10 +8,11 @@ import { ModelConfig } from "../../plugins/htmodel";
 export const modelConfig: ModelConfig = {
     [COW_TOKEN]: {
         useClass: Cow,
-        size: 200,
+        size: 100,
     },
     [FARM_TOKEN]: {
         useClass: Farm,
+        size: 1,
     },
     [VIRUS_TOKEN]: {
         useClass: Virus,
@@ -19,6 +20,6 @@ export const modelConfig: ModelConfig = {
     },
     [VIRUS_SPAWNER_TOKEN]: {
         useClass: VirusSpawner,
-        size: 10
+        size: 1
     }
 }
