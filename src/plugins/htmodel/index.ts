@@ -1,5 +1,3 @@
-import { Cow } from "../../entities/cow";
-
 // --------------------------------
 export interface IAgent {
     tick(): void;
@@ -128,9 +126,7 @@ class Model implements IModel {
         return (this.getInstance<T>(token) as IPopulation<T>)[index] as T;
     }
     public tick() {
-        this._map.forEach(agent => {
-            agent.tick();
-        });
+        
     }
 
     private _clear() {
@@ -142,6 +138,11 @@ class Model implements IModel {
                 this.getInstance(token);
             }
         });
+        setInterval(() => {
+            this._map.forEach(agent => {
+                agent.tick();
+            });
+        }, 10);
     }
     private _set(token: string, useClass: any, size?: number) {
         this._map.set(token, new Population(this, useClass, size));

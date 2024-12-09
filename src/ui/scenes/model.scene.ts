@@ -14,7 +14,7 @@ class AgentPresentation<T extends IAgent> extends PixiContainer {
 }
 
 const PLATO_DEFAULT_SIZE = 4000;
-const PLATO_SOURCE_SIZE = 32;
+const PLATO_SOURCE_SIZE = 16;
 
 export class ModelScene extends PixiContainer implements SceneInterface {
 
