@@ -9,6 +9,7 @@ import { options } from './shared/config/manifest';
 import { LoaderScene } from './ui/scenes/loader.scene';
 import { ModelScene } from './ui/scenes/model.scene';
 import { ModelFactory } from './plugins/htmodel';
+//import { ExampleScene } from './ui/scenes/example.scene';
 
 const boostsrap = async () => {
     const canvas = document.getElementById("pixi-screen") as HTMLCanvasElement;
@@ -36,6 +37,7 @@ const boostsrap = async () => {
         model.setup();
         const scene = new ModelScene(model);
         Manager.changeScene(scene);
+        //Manager.changeScene(new ExampleScene());
     });
 }
 
