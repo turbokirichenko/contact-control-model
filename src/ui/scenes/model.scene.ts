@@ -1,4 +1,4 @@
-import { PixiContainer,PixiGraphics, PixiText, PixiTexture, PixiTilingSprite } from "../../plugins/engine";
+import { PixiContainer,PixiGraphics, PixiTexture, PixiTilingSprite } from "../../plugins/engine";
 import { Manager, SceneInterface } from "../../plugins/engine/manager";
 import { IAgent, IModel, IPresentation } from "../../plugins/htmodel";
 import { GUIBarContainer } from "../containers/gui-bar.container";
@@ -26,16 +26,16 @@ class AgentPresentation<T extends IAgent> extends PixiContainer {
 
 const PLATO_DEFAULT_SIZE = 4000;
 const PLATO_SOURCE_SIZE = 16;
-const X_SCALE = 4;
-const X_SCORE = 1;
+export const X = {
+    SCALE: 4,
+    SCORE: 1
+}
 
 export class ModelScene extends PixiContainer implements SceneInterface {
 
     private _containersMap: Map<string, AgentPresentation<IAgent>[]> = new Map();
-    private _text: PixiText = new PixiText({ text: 'time passed: ', style: { fontSize: '24px', fill: 'red' }});
     private _gui: PixiContainer & SceneInterface;
     private _screen: PixiContainer;
-    private secondCounter = 0;
     private _target: any = null;
     private _plato: PixiContainer;
 
@@ -48,11 +48,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         const parentHeight = Manager.height;
         this.width = parentWidth;
         this.height = parentHeight;
-
-        this._text.position.x = parentWidth/2;
-        this._text.position.y = parentHeight/2;
-        this._text.anchor = 0.5;
-        this._gui = new GUIBarContainer();
+        this._gui = new GUIBarContainer(this._model);
 
         this._screen = new PixiContainer();
         this._screen.interactive = true;
@@ -73,15 +69,15 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this._screen.on("pointerdown", this._onStart.bind(this), this._screen);
         this.on('pointerup', this._onEnd.bind(this));
         this.on('pointerupoutside', this._onEnd.bind(this));
-        this._screen.scale = X_SCALE;
+        this._screen.scale = X.SCALE;
 
-        this.addChild(this._screen, this._gui, this._text);
+        this.addChild(this._screen, this._gui);
         this.resize(parentWidth, parentHeight);
     }
 
     update(_framesPassed: number): void {
-        for (let i = 0; i < X_SCORE; ++i) {
-            this.secondCounter++;
+        for (let i = 0; i < X.SCORE; ++i) {
+            this._gui.update(_framesPassed);
             this._model.tick();
         }
 
@@ -121,7 +117,6 @@ export class ModelScene extends PixiContainer implements SceneInterface {
                 })
             }
         });
-        this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min, cows: ${this._model.cow.size}, viruses: ${this._model.virus.size}`
     }
 
     resize(_parentWidth: number, _parentHeight: number): void {
