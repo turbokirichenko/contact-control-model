@@ -14,6 +14,7 @@ export interface IPopulation<T extends IAgent> extends IAgent {
 }
 
 export interface IModel extends IAgent {
+    [token: string]: any;
     setup(): void;
     getInstance<T extends IAgent>(token: string): IPopulation<T>;
     getOne<T extends IAgent>(token: string, index?: number): T | undefined;
@@ -98,7 +99,7 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
     }
 }
 
-class Model implements IModel {
+export class Model implements IModel {
     private _map: IModelMap;
     constructor(private readonly _raw: IAgentMap) {
         this._map = new Map<string, IPopulation<IAgent>>();
@@ -126,7 +127,9 @@ class Model implements IModel {
         return (this.getInstance<T>(token) as IPopulation<T>)[index] as T;
     }
     public tick() {
-        
+        this._map.forEach(agent => {
+            agent.tick();
+        });
     }
 
     private _clear() {
@@ -138,14 +141,14 @@ class Model implements IModel {
                 this.getInstance(token);
             }
         });
-        setInterval(() => {
-            this._map.forEach(agent => {
-                agent.tick();
-            });
-        }, 10);
     }
     private _set(token: string, useClass: any, size?: number) {
-        this._map.set(token, new Population(this, useClass, size));
+        var population = new Population(this, useClass, size);
+        this._map.set(token, population);
+        Object.defineProperty(this, token, {
+            value: population,
+            writable: false
+        });
     }
 }
 

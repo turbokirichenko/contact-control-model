@@ -29,6 +29,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
 
     constructor(private readonly _model: IModel) {
         super();
+        console.log(this._model);
         this.interactive = true;
         this.position.x = 0;
         this.position.y = 0;
@@ -72,6 +73,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     update(_framesPassed: number): void {
         for (let i = 0; i < X_SCORE; ++i) {
             this.secondCounter++;
+            
             this._model.tick();
         }
 
@@ -109,7 +111,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
                 })
             }
         });
-        this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min, cows: ${this._model.getInstance(COW_TOKEN).size}, viruses: ${this._model.getInstance(VIRUS_TOKEN).size}`
+        this._text.text = `time passed: ${Math.floor(this.secondCounter/(60*60))} hours, ${Math.floor(this.secondCounter/60%60)} min, cows: ${this._model.cow.size}, viruses: ${this._model.virus.size}`
     }
 
     resize(_parentWidth: number, _parentHeight: number): void {
