@@ -1,8 +1,12 @@
-import { Cow, COW_TOKEN } from "../../entities/cow";
-
 interface IModelConfig {
     globals: IParameters;
+    actions?: IActionConfig[];
     populations: IPopulationConfig<any>[];
+}
+
+interface IActionConfig {
+    token?: string;
+    useFunction: (model: IModel) => void;
 }
 
 interface IPopulationConfig<Entity> {
@@ -33,7 +37,7 @@ interface IModel {
     setup(): void;
     reset(): void;
     globals: IParameters;
-    [token: string]: any | undefined;
+    [token: string]: any;
 }
 
 /** Iterable object that contains the group of Entity;
@@ -65,6 +69,8 @@ interface IPopulation<Entity> {
 
 
 class Model implements IModel {
+    [token: string]: any;
+
     private _map;
 
     public constructor(private readonly _config: IModelConfig) {
@@ -87,10 +93,10 @@ class Model implements IModel {
                 return undefined;
             }
             var population = new Population(config.useValue ?? config.useClass);
-            /*Object.defineProperty(this, token, {
+            Object.defineProperty(this, token, {
                 value: population,
                 writable: false,
-            });*/
+            });
             return this._map.set(token, population).get(token) as IPopulation<E>;
         }
     }
@@ -142,7 +148,7 @@ class Population<E> extends Array<E> implements IPopulation<E> {
     }
 
     private _add(): E {
-        var instance = typeof this._constr == 'object'
+        var instance = Object(this._constr).prototype
             ? new (this._constr as { new(...args: any[]): E })()
             : this._constr as E;
         this.push(instance);
@@ -165,20 +171,3 @@ export abstract class ModelSpawner {
         return new Model(config);
     }
 }
-
-const model = ModelSpawner.define({
-    globals: {
-        COW_SIZE: 100,
-    },
-    populations: [
-        { token: 'cows', useValue: { name: 'cow' } },
-        { token: 'viruses', useValue: { name: 'cow' }}
-    ],
-});
-
-model.setup();
-const cows = model.use<{ name: string}>('cows');
-if (cows) {
-    cows.create(100);
-}
-console.log(model);

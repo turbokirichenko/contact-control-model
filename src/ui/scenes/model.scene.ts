@@ -1,25 +1,37 @@
-import { COW_TOKEN } from "../../entities/cow";
-import { VIRUS_TOKEN } from "../../entities/virus";
 import { PixiContainer,PixiGraphics, PixiText, PixiTexture, PixiTilingSprite } from "../../plugins/engine";
 import { Manager, SceneInterface } from "../../plugins/engine/manager";
-import { IAgent, IModel } from "../../plugins/htmodel";
-import { X_SCORE, X_SCALE, presentationConfig, PresentationConfig } from "../../shared/config/presentation.config";
+import { IAgent, IModel, IPresentation } from "../../plugins/htmodel";
 import { GUIBarContainer } from "../containers/gui-bar.container";
 
 class AgentPresentation<T extends IAgent> extends PixiContainer {
-    constructor(public config: PresentationConfig<PixiGraphics, T>) {
+    constructor(public config: IPresentation, agent: T) {
         super();
-        this.addChild(config.graphic());
+        const container = config.container(agent);
+        const graphic = new PixiGraphics()
+        if (container.type === 'circle') {
+            graphic.circle(0, 0, container.width)
+        } else {
+            graphic.rect(
+                container.positionX ?? 0, 
+                container.positionY ?? 0, 
+                container.width, 
+                container.height
+            );
+        }
+        graphic.fill(container.fill);
+        graphic.alpha = container.opacity ?? graphic.alpha;
+        this.addChild(graphic);
     }
 }
 
 const PLATO_DEFAULT_SIZE = 4000;
 const PLATO_SOURCE_SIZE = 16;
+const X_SCALE = 4;
+const X_SCORE = 1;
 
 export class ModelScene extends PixiContainer implements SceneInterface {
 
     private _containersMap: Map<string, AgentPresentation<IAgent>[]> = new Map();
-    private _presentation: PresentationConfig<PixiGraphics, any>[];
     private _text: PixiText = new PixiText({ text: 'time passed: ', style: { fontSize: '24px', fill: 'red' }});
     private _gui: PixiContainer & SceneInterface;
     private _screen: PixiContainer;
@@ -29,7 +41,6 @@ export class ModelScene extends PixiContainer implements SceneInterface {
 
     constructor(private readonly _model: IModel) {
         super();
-        console.log(this._model);
         this.interactive = true;
         this.position.x = 0;
         this.position.y = 0;
@@ -37,8 +48,6 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         const parentHeight = Manager.height;
         this.width = parentWidth;
         this.height = parentHeight;
-
-        this._presentation = [...presentationConfig];
 
         this._text.position.x = parentWidth/2;
         this._text.position.y = parentHeight/2;
@@ -73,25 +82,27 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     update(_framesPassed: number): void {
         for (let i = 0; i < X_SCORE; ++i) {
             this.secondCounter++;
-            
             this._model.tick();
         }
 
-        this._presentation.map(slide => {
-            var population = this._model.getInstance(slide.token);
-            if (!this._containersMap.has(slide.token)) {
-                this._containersMap.set(slide.token, []);
+        this._model.instances.forEach((population, token) => {
+            if (!population.presentation) {
+                return;
             }
-            var containers = this._containersMap.get(slide.token);
+            if (!this._containersMap.has(token)) {
+                this._containersMap.set(token, []);
+            }
+            var containers = this._containersMap.get(token);
             if (containers && population.size > containers.length) {
                 var insertSize = population.size - containers?.length;
                 if (insertSize === 0) {
                     return;
                 }
-                var insertContainers = Array(insertSize).fill(0).map(_ => {
-                    const cowContainer = new AgentPresentation(slide);
+                var insertContainers = Array(insertSize).fill(0).map((_, index) => {
+                    const cowContainer = new AgentPresentation(population.presentation!, population[containers?.length ?? 0 + index]);
                     return cowContainer;
                 });
+                console.log(insertContainers.length);
                 if (insertContainers.length) {
                     this._screen.addChild(...insertContainers);
                     containers.push(...insertContainers);

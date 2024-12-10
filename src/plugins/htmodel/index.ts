@@ -6,6 +6,7 @@ export interface IAgent {
 export interface IPopulation<T extends IAgent> extends IAgent {
     [index: number]: T;
     get size(): number;
+    presentation: IPresentation | undefined;
     push(agent: T): number;
     add(): T;
     remove(agent: T): T | undefined;
@@ -15,6 +16,7 @@ export interface IPopulation<T extends IAgent> extends IAgent {
 
 export interface IModel extends IAgent {
     [token: string]: any;
+    get instances(): Map<string, IPopulation<IAgent>>;
     setup(): void;
     getInstance<T extends IAgent>(token: string): IPopulation<T>;
     getOne<T extends IAgent>(token: string, index?: number): T | undefined;
@@ -29,34 +31,57 @@ export interface PopulationConfig {
     useValue?: IAgent;
     useClass?: new (...args: any[]) => IAgent;
     size?: number;
-    presentation?: { };
+    presentation?: IPresentation;
 }
 
-/*interface PresentationConfig<V, T extends IAgent> {
-    token: string;
-    graphic: () => V;
-    position: (target: T) => { x: number, y: number };
-    direction: (target: T) => number | undefined;
-}*/
+export interface IParameters {
+    [param: string]: any;
+}
+
+export interface IPresentation {
+    container: (obj: any) => IAbstractContainer;
+    position: (obj: any) => { x: number, y: number };
+    direction: (obj: any) => number;
+    zIndex: (obj: any) => number;
+}
+
+export interface IAbstractContainer {
+    width: number;
+    height: number;
+    positionX?: number;
+    positionY?: number;
+    type?: 'circle' | 'rect';
+    fill: string | number;
+    opacity?: number;
+}
 
 export interface IAgentMap extends Map<string, PopulationConfig> {};
-export interface IModelMap extends Map<string, IPopulation<IAgent>> {};
+export interface IModelMap extends Map<string, IPopulation<any>> {};
 
 class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
-    constructor(model: IModel, constr: { new(...args: any[]): T },     initialNumber?: number);
-    constructor(model: IModel, value: T,                               initialNumber?: number);
-    constructor(private readonly _model: IModel, constr: { new(...args: any[]): T } | T, initialNumber: number = 1) {
+    private _constr?: { new(...args: any[]): T };
+    private _value?: T;
+
+    constructor(model: IModel, constr: { new(...args: any[]): T }, presentation?: IPresentation, initialNumber?: number);
+    constructor(model: IModel, value: T,  presentation?: IPresentation, initialNumber?: number);
+    constructor(
+        private readonly _model: IModel, 
+        constr: { new(...args: any[]): T } | T, 
+        presentation?: IPresentation, 
+        initialNumber: number = 1
+    ) {
         super();
         this._constr = constr as { new (...args: any[]): T };
+        this.presentation = presentation;
         for (let i = 0; i < initialNumber; ++i) {
             this.add();
         }
     }
+
+    public readonly presentation;
     public get token() { 
         return this._constr?.name 
     };
-    private _constr?: { new(...args: any[]): T };
-    private _value?: T;
     public get size() { return this.length }
     public tick() {
         this.forEach(agent => {
@@ -82,8 +107,8 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
     }
     public forEach = super.forEach;
     private _fabric(): T {
-        if (this._constr) {
-            return new this._constr(this._model, this) as T;
+        if (Object(this._constr).prototype) {
+            return new (this._constr as { new(...args: any[]): T })(this._model, this) as T;
         } else {
             return this._value as T;
         }
@@ -104,6 +129,9 @@ export class Model implements IModel {
     constructor(private readonly _raw: IAgentMap) {
         this._map = new Map<string, IPopulation<IAgent>>();
     }
+    public get instances() { 
+        return this._map; 
+    }
     public setup() {
         this._clear();
         this._setup();
@@ -117,7 +145,7 @@ export class Model implements IModel {
             }
             const config = this._raw.get(token);
             if (config && config.useClass) {
-                this._set(token, config.useClass, config.size);
+                this._set(token, config.useClass, config.presentation, config.size);
                 return this._map.get(token)! as IPopulation<T>;
             }
             throw new Error('empty useClass');
@@ -142,8 +170,8 @@ export class Model implements IModel {
             }
         });
     }
-    private _set(token: string, useClass: any, size?: number) {
-        var population = new Population(this, useClass, size);
+    private _set(token: string, useClass: any, presentation?: IPresentation, size?: number) {
+        var population = new Population(this, useClass, presentation, size);
         this._map.set(token, population);
         Object.defineProperty(this, token, {
             value: population,
