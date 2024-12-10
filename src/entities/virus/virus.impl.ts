@@ -32,11 +32,18 @@ export class Virus implements IVirus<ICow> {
     }
 
     public infect(to: ICow): void {
-        if (this.infected) {
-            return;
-        }
+        const virus = this._model.getInstance<Virus>(VIRUS_TOKEN);
+        var flag = false;
+        virus.forEach(virus => {
+            if (to === virus.infected) {
+                flag = true;
+            }
+        });
+        if (flag) {
+            virus.remove(this);
+        };
         this.infected = to;
-    } 
+    }
 
     public spread(): void {
         if (this.infected) {
@@ -53,6 +60,9 @@ export class Virus implements IVirus<ICow> {
                     virus.infect(cow);
                 }
             });
+        } else {
+            const virus = this._model.getInstance<Virus>(VIRUS_TOKEN);
+            virus.remove(this);
         }
     }
 

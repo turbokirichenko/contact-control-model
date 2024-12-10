@@ -1,35 +1,18 @@
-// IGlobalMap
-// - объявлять глобальную переменную
-// - обращаться к переменной
-// - изменять переменную
-// - перебирать переменные
-
-// IModel
-// - создавать популяцию
-// - отключать популяцию
-// - перебирать все популяции
-// - обращаться к конкретной популяции
-
-// IPopulation<IEntity> - итерируемый объект, хрянйщий совокупность сущностей
-// - создавать экземпляр(ы) сущности
-// - удалять экземпляр(ы) сущности
-// - перебирать экземпляры сущности
-// - обращаться к конкретному экземпляру
-
 interface IModelConfig {
-    actions: IActionConfig[];
+    globals: IParameters;
+    actions?: IActionConfig[];
     populations: IPopulationConfig<any>[];
 }
 
 interface IActionConfig {
-    token: string;
-    action: (model: IModel) => void;
-    infinity?: boolean;
+    token?: string;
+    useFunction: (model: IModel) => void;
 }
 
 interface IPopulationConfig<Entity> {
     token?: string;
-    useClass: new (model: IModel) => Entity;
+    useValue?: object;
+    useClass?: new (model: IModel) => Entity;
     params?: IParameters;
     presentation?: IPresentation<Entity> | true;
 }
@@ -49,9 +32,12 @@ interface IPresentation<T> {
  * 
  */
 interface IModel {
-    use<Entity>(token: string): IPopulation<Entity>;
-    try(name: string): void;
+    use<Entity>(token: string): IPopulation<Entity> | undefined;
+    ask(func: (target: IPopulation<any>) => void): void;
+    setup(): void;
     reset(): void;
+    globals: IParameters;
+    [token: string]: any;
 }
 
 /** Iterable object that contains the group of Entity;
@@ -75,46 +61,73 @@ interface IPopulation<Entity> {
      * @param func 
      */
     ask(func: (target: Entity) => void): void;
+    /** population size
+     * 
+     */
+    get size(): number;
 }
 
 
 class Model implements IModel {
+    [token: string]: any;
+
     private _map;
 
-    constructor(private readonly _config: IModelConfig) {
+    public constructor(private readonly _config: IModelConfig) {
         this._map = new Map<string, IPopulation<any>>();
-        this._config.populations.forEach(config => {
-            this.use(config.token ?? config.useClass.name);
-        });
     }
 
-    use<E>(token: string): IPopulation<E> {
+    public get globals() {
+        return this._config.globals;
+    }
+
+    public use<E>(token?: string): IPopulation<E> | undefined{
+        if (!token) {
+            throw new Error('token or useClass is undefined');
+        }
         if (this._map.has(token)) {
             return this._map.get(token)! as IPopulation<E>;
         } else {
-            var flag = this._config.populations.filter(population => population.token === token)
-            if (!flag.length) {
-                throw new Error('this token is not exist in population config!');
+            var config = this._config.populations.find(population => population.token === token)
+            if (!config) {
+                return undefined;
             }
-            var population = flag[0];
-            return this._map.set(token, new Population(population.useClass, population.params)).get(token) as IPopulation<E>;
+            var population = new Population(config.useValue ?? config.useClass);
+            Object.defineProperty(this, token, {
+                value: population,
+                writable: false,
+            });
+            return this._map.set(token, population).get(token) as IPopulation<E>;
         }
     }
 
-    try(token: string): void {
-        var value = this._config.actions.find(value => value.token === token);
-        value?.action(this);
+    public ask(func: (target: IPopulation<any>) => void) {
+        this._map.forEach(func);
     }
 
-    reset() {
+    public setup(): void {
+        this._config.populations.forEach(config => {
+            this.use(config.token ?? config.useClass?.name);
+        });
+    }
+
+    public reset() {
+        this._reset();
+    }
+
+    private _reset(): void {
         this._map = new Map<string, IPopulation<any>>();
     }
 }
 
 class Population<E> extends Array<E> implements IPopulation<E> {
-    constructor(private readonly _constr: { new(...args: any[]): E }, public readonly params?: IParameters) { 
-        super(); 
+    public constructor(private readonly _constr: E | { new(...args: any[]): E }) { 
+        super();
     };
+
+    public get size() {
+        return this.length;
+    }
 
     public create(size: number) {
         return Array(size).fill(0).map(_ => {
@@ -135,7 +148,9 @@ class Population<E> extends Array<E> implements IPopulation<E> {
     }
 
     private _add(): E {
-        var instance = new this._constr();
+        var instance = Object(this._constr).prototype
+            ? new (this._constr as { new(...args: any[]): E })()
+            : this._constr as E;
         this.push(instance);
         return instance;
     }
