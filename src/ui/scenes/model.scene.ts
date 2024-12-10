@@ -102,7 +102,6 @@ export class ModelScene extends PixiContainer implements SceneInterface {
                     const cowContainer = new AgentPresentation(population.presentation!, population[containers?.length ?? 0 + index]);
                     return cowContainer;
                 });
-                console.log(insertContainers.length);
                 if (insertContainers.length) {
                     this._screen.addChild(...insertContainers);
                     containers.push(...insertContainers);
