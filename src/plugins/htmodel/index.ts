@@ -100,7 +100,7 @@ class Population<T extends IAgent> extends Array<T> implements IPopulation<T> {
         var seekIndex = typeof agent === "number" 
             ? agent 
             : this.seek(agent);
-        if (seekIndex) {
+        if (seekIndex != undefined && seekIndex >= 0) {
             return this.splice(seekIndex, 1)[0];
         }
         return undefined;
