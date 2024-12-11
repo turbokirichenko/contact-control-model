@@ -14,7 +14,7 @@ export interface IPopulationConfig<Entity> {
     token?: string;
     useValue?: Entity;
     useClass?: new (model: IModel/**use to get populations*/) => Entity;
-    presentation?: IPresentation<Entity> | true;
+    presentation?: IPresentation<Entity>;
 }
 
 export interface IParameters {
@@ -43,6 +43,7 @@ export interface IAbstractContainer {
  */
 export interface IModel {
     use<Entity>(token: string): IPopulation<Entity> | undefined;
+    tick(): IModel;
     setup(): IModel;
     reset(): IModel;
     globals: IParameters | undefined;
@@ -83,6 +84,10 @@ export interface IPopulation<Entity> {
      * 
      */
     get size(): number;
+    /** the presentation of each agents in population  
+     * 
+    */
+    get presentation(): IPresentation<Entity> | undefined;
 }
 
 
@@ -109,6 +114,17 @@ export class Model implements IModel {
         return this._actions;
     }
 
+    public tick(): IModel {
+        this._populations.forEach(_pop => {
+            _pop.ask(_tar => {
+                if (typeof _tar.tick === 'function') {
+                    _tar.tick()
+                }
+            })
+        })
+        return this;
+    }
+
     public use<E>(token?: string): IPopulation<E> | undefined{
         if (!token) {
             throw new Error('token or useClass is undefined');
@@ -120,10 +136,10 @@ export class Model implements IModel {
             if (!config) {
                 return undefined;
             }
-            var population = new Population(this, config.useValue ?? config.useClass);
+            var population = new Population(this, config.useValue ?? config.useClass, config.presentation);
             Object.defineProperty(this, token, {
                 value: population,
-                writable: false,
+                writable: true,
             });
             return this._populations.set(token, population).get(token) as IPopulation<E>;
         }
@@ -169,18 +185,31 @@ export class Model implements IModel {
     }
 
     private _reset(): void {
+        this._populations.forEach((_, key) => {
+            if (this[key]) {
+                this[key] = undefined;
+            }
+        });
         this._populations = new Map<string, IPopulation<any>>();
     }
 }
 
 export class Population<E> extends Array<E> implements IPopulation<E> {
 
-    public constructor(private readonly _model: IModel, private readonly _constr: E | { new(model: IModel): E }) { 
+    public constructor(
+        private readonly _model: IModel, 
+        private readonly _constr: E | { new(model: IModel): E }, 
+        private readonly _presentation?: IPresentation<E>
+    ) { 
         super();
     };
 
     public get size() {
         return this.length;
+    }
+
+    public get presentation() {
+        return this._presentation;
     }
 
     public create(size: number) {
