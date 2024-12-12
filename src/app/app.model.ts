@@ -1,5 +1,4 @@
-import { DefineModel } from "../plugins/htmodel";
+import { ModelSpawner } from "../plugins/htmodel/main";
 import { modelConfig } from "../shared/config/model.config";
 
-@DefineModel(modelConfig)
-export class AppModel {}
+export const model = ModelSpawner.define(modelConfig);
