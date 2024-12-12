@@ -33,7 +33,7 @@ const SCENE_CONSTANTS = {
     PLATO_ALPHA: 0.1,
 }
 
-const SCENE_CONFIG = {
+export const SCENE_CONFIG = {
     SCALE: 4,
     SPEED: 1,
 }
@@ -45,7 +45,7 @@ const EVENTS = {
 }
 
 export class ExampleScene extends PixiContainer implements SceneInterface {
-    private _gui: GUIContainer;
+    private _gui: PixiContainer & SceneInterface;
     private _containersMap: Map<string, Presentation<any>[]>;
     private _screen: PixiContainer;
     private _target: PixiContainer | null;
@@ -94,6 +94,7 @@ export class ExampleScene extends PixiContainer implements SceneInterface {
                 command();
             }
         }
+        this._gui.update(_framesPassed);
         this._model.populations.forEach((population, token) => {
             if (!population.presentation) {
                 return;

@@ -4,13 +4,13 @@ import { FARMS_TOKEN, COWS_TOKEN, VIRUSES_TOKEN, Cow, Farm, Virus } from "../../
 
 export const modelConfig: IModelConfig = {
     globals: {
-        COWS_INITIAL_SIZE: 99,
+        COWS_INITIAL_SIZE: 100,
         COW_WIDTH_METERS: 1,
         COW_HEIGHT_METERS: 2,
         COW_SPEED: 2,
         COW_WAITING_TIME: 20*60,
-        FARM_WIDTH_METERS: 150,
-        FARM_HEIGHT_METERS: 150,
+        FARM_WIDTH_METERS: 100,
+        FARM_HEIGHT_METERS: 100,
         FARM_POSITION_X: 0,
         FARM_POSITION_Y: 0,
         VIRUS_SPREAD_PROBABILITY: 0.001,

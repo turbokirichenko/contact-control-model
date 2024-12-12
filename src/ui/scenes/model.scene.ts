@@ -27,7 +27,7 @@ class AgentPresentation<T extends IAgent> extends PixiContainer {
 const PLATO_DEFAULT_SIZE = 4000;
 const PLATO_SOURCE_SIZE = 16;
 export const X = {
-    SCALE: 4,
+    SCALE: 8,
     SCORE: 1
 }
 
@@ -76,11 +76,8 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     }
 
     update(_framesPassed: number): void {
-        for (let i = 0; i < X.SCORE; ++i) {
-            this._gui.update(_framesPassed);
-            this._model.tick();
-        }
-
+        console.log('ppp');
+        this._gui.update(_framesPassed);
         this._model.instances.forEach((population, token) => {
             if (!population.presentation) {
                 return;
@@ -124,7 +121,6 @@ export class ModelScene extends PixiContainer implements SceneInterface {
         this._gui.resize(_parentWidth, _parentHeight);
         this._gui.position.x = _parentWidth - this._gui.width;
         this._gui.position.y = 0;
-
         this._plato.position.set((_parentWidth - this._gui.width)/2, (_parentHeight)/2);
     }
 
