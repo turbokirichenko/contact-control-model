@@ -1,7 +1,77 @@
+import { FederatedPointerEvent } from "pixi.js";
 import { PixiContainer, PixiGraphics, PixiText } from "../../plugins/engine";
 import { SceneInterface } from "../../plugins/engine/manager";
 import { IModel, IPopulation } from "../../plugins/htmodel/main";
 import { SCENE_CONFIG } from "../scenes/example.scene";
+
+class ScrollScaleBar extends PixiContainer implements SceneInterface {
+    private _scrollPoint: PixiGraphics;
+    private _scrollPosition: number = 0;
+    private _bg: PixiGraphics;
+    private _scrollLine: PixiGraphics;
+    private _target: PixiGraphics | null;
+    private _scalePoint: number;
+
+    constructor() {
+        super();
+        this._target = null;
+        this._scalePoint = 0;
+        this._bg = new PixiGraphics();
+        this._bg
+            .rect(0, 0, 200, 60)
+            .fill('black');
+        this._bg.alpha = 0;
+        this._scrollPoint = new PixiGraphics();
+        this._scrollPoint
+            .circle(0, 0, 10)
+            .fill(0xfdf4e3);
+        this._scrollLine = new PixiGraphics();
+        this._scrollLine
+            .rect(0, 0, 180, 2.5)
+            .fill(0xfdf4e3);
+        this._scrollLine.alpha = 0.25;
+        
+        this._bg.interactive = true;
+        this._bg.on('pointerdown', () => { 
+            if (!this._target) {
+                this._target = this._scrollPoint;
+                this._scrollPoint.alpha = 0.9;
+            }
+        })
+        this._bg.on('pointermove', (event: FederatedPointerEvent) => {
+            console.log('move');
+            if (this._target) {
+                var x = this._target.x;
+                if (Math.abs(this._target.position.x + event.movementX) < (this._scrollLine.width/2 - 10)) {
+                    this._scrollPosition = x + event.movementX;
+                    this._target.position.set(Math.floor(this._scrollPosition), 0);
+                    this._scalePoint += event.movementX;
+                    SCENE_CONFIG.SCALE = (1 + (Math.abs(this._scalePoint + this._bg.width/2)/this._bg.width*8));
+                }
+            }
+        });
+        this._bg.on('pointerup', () => {
+            this._target = null;
+            this._scrollPoint.alpha = 1;
+        });
+        this._bg.on('pointerupoutside', () => {
+            this._target = null;
+            this._scrollPoint.alpha = 1;
+        });
+        
+        this.addChild( this._scrollLine, this._scrollPoint, this._bg);
+        this._bg.position.set(-this._bg.width/2, -this._bg.height/2);
+        this._scrollLine.position.set(-this._scrollLine.width/2, 0);
+        this._scrollPoint.position.set(0, 0);
+    }
+
+    update () {
+    }
+
+    resize (_w: number, _h: number) {
+        
+    }
+}
 
 class PopulationBar extends PixiContainer implements SceneInterface {
     private _population?: IPopulation<any>;
@@ -109,6 +179,7 @@ export class ModelPanel extends PixiContainer implements SceneInterface {
     private _globals: PixiText;
     private _modelTitle: PixiText;
     private _speedTitle: PixiText;
+    private _scrollScaleBar: ScrollScaleBar;
     constructor(private readonly _model: IModel) {
         super();
         this._modelTitle = new PixiText({ text: `Model`, style: {
@@ -116,7 +187,7 @@ export class ModelPanel extends PixiContainer implements SceneInterface {
             fontWeight: 'bold',
             fill: 0xfdf4e3,
         }});
-        this._speedTitle = new PixiText({ text: `speed: x${SCENE_CONFIG.SPEED}\nscale: 1m:${SCENE_CONFIG.SCALE}px`, style: {
+        this._speedTitle = new PixiText({ text: `speed: x${SCENE_CONFIG.SPEED}\nscale: 1m:${SCENE_CONFIG.SCALE.toFixed(2)}px`, style: {
             fontSize: 11,
             fontWeight: 'bold',
             fill: 0xfdf4e3,
@@ -139,20 +210,22 @@ export class ModelPanel extends PixiContainer implements SceneInterface {
         this._btnSpeedPlus.interactive = true;
         this._btnSpeedPlus.on('pointerup', () => {
             if (SCENE_CONFIG.SPEED >= 2) SCENE_CONFIG.SPEED = Math.floor(SCENE_CONFIG.SPEED/2);
-            this._speedTitle.text = `speed: x${SCENE_CONFIG.SPEED}\nscale: 1m:${SCENE_CONFIG.SCALE}px`;
+            this._speedTitle.text = `speed: x${SCENE_CONFIG.SPEED}\nscale: 1m:${SCENE_CONFIG.SCALE.toFixed(2)}px`;
         });
         this._btnSpeedMinus.interactive = true;
         this._btnSpeedMinus.on('pointerup', () => {
             if (!SCENE_CONFIG.SPEED) SCENE_CONFIG.SPEED += 1;
             if (SCENE_CONFIG.SPEED < 63) SCENE_CONFIG.SPEED*=2;
-            this._speedTitle.text = `speed: x${SCENE_CONFIG.SPEED}\nscale: 1m:${SCENE_CONFIG.SCALE}px`;
+            this._speedTitle.text = `speed: x${SCENE_CONFIG.SPEED}\nscale: 1m:${SCENE_CONFIG.SCALE.toFixed(2)}px`;
         });
 
+        this._scrollScaleBar = new ScrollScaleBar();
         this.addChild(
             this._btnSpeedMinus,
             this._btnSpeedPlus,
             this._globals,
             this._speedTitle,
+            this._scrollScaleBar,
             this._modelTitle
         )
     }
@@ -171,7 +244,10 @@ export class ModelPanel extends PixiContainer implements SceneInterface {
 
         this._btnSpeedPlus.position.set(0, this._modelTitle.height + this._globals.height + 2*gap);
         this._btnSpeedMinus.position.set(160, this._modelTitle.height + this._globals.height + 2*gap);
-        this._speedTitle.position.set(80, this._modelTitle.height + this._globals.height + 2*gap)
+        this._speedTitle.position.set(80, this._modelTitle.height + this._globals.height + 2*gap);
+
+        this._scrollScaleBar.resize(_screenWidth, _screenHeight);
+        this._scrollScaleBar.position.set(280, this._modelTitle.height + this._globals.height + 2*gap);
     };
 }
 

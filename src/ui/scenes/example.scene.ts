@@ -1,3 +1,4 @@
+import { FederatedPointerEvent } from "pixi.js";
 import { PixiContainer, PixiGraphics, PixiTilingSprite, PixiTexture } from "../../plugins/engine";
 import { Manager } from "../../plugins/engine/manager";
 import { SceneInterface } from "../../plugins/engine/manager";
@@ -131,6 +132,10 @@ export class ExampleScene extends PixiContainer implements SceneInterface {
                 })
             }
         });
+
+        if (SCENE_CONFIG.SCALE != this._screen.scale.x) {
+            this._screen.scale.set(SCENE_CONFIG.SCALE);
+        }
     }
 
     resize(_w: number, _h: number): void {
@@ -139,7 +144,7 @@ export class ExampleScene extends PixiContainer implements SceneInterface {
         this._gui.position.y = 0;
     }
 
-    private _onMove(event: PointerEvent) {
+    private _onMove(event: FederatedPointerEvent) {
         if (this._target) {
             var [x, y] = [this._target.position.x, this._target.position.y]
             if (
