@@ -69,7 +69,7 @@ export interface IPopulation<Entity> {
      * 
      * @param size 
      */
-    create(size: number): Entity[];
+    create(size: number, ...args: any[]): Entity[];
     /** remove the object from population
      * 
      * @param obj 
@@ -198,7 +198,7 @@ export class Population<E> extends Array<E> implements IPopulation<E> {
 
     public constructor(
         private readonly _model: IModel, 
-        private readonly _constr: E | { new(model: IModel): E }, 
+        private readonly _constr: E | { new(model: IModel, ...args: any[]): E }, 
         private readonly _presentation?: IPresentation<E>
     ) { 
         super();
@@ -212,9 +212,9 @@ export class Population<E> extends Array<E> implements IPopulation<E> {
         return this._presentation;
     }
 
-    public create(size: number) {
+    public create(size: number, ...params: any[]) {
         return Array(size).fill(0).map(_ => {
-            return this._add();
+            return this._add(params);
         });
     }
 
@@ -230,9 +230,9 @@ export class Population<E> extends Array<E> implements IPopulation<E> {
         this.map(func);
     }
 
-    private _add(): E {
+    private _add(...args: any[]): E {
         var instance = Object(this._constr).prototype
-            ? new (this._constr as { new(model: IModel): E })(this._model)
+            ? new (this._constr as { new(model: IModel, ...args: any[]): E })(this._model, ...args)
             : JSON.parse(JSON.stringify(this._constr)) as E;
         this.push(instance);
         return instance;
