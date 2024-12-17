@@ -1,6 +1,7 @@
 export interface IModelConfig {
     globals?: IParameters;
     actions?: IActionConfig[];
+    charts?: IChartConfig[];
     populations?: IPopulationConfig<any>[];
 }
 
@@ -8,6 +9,18 @@ export interface IActionConfig {
     token?: string;
     useValue?: IAction;
     useCLass?: new (model: IModel/**use to get populations*/) => IAction;
+}
+
+export interface IChartConfig {
+    token: string;
+    useValue?: object;
+    useClass?: new <DataType>(model: IModel) => IChart<DataType>;
+}
+
+export interface IChart<DataType> {
+    type: 'line' | 'diagram'; 
+    data: DataType[];
+    update(): void;
 }
 
 export interface IPopulationConfig<Entity> {
