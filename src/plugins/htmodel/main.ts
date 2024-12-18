@@ -13,14 +13,25 @@ export interface IActionConfig {
 
 export interface IChartConfig {
     token: string;
-    useValue?: object;
-    useClass?: new <DataType>(model: IModel) => IChart<DataType>;
+    useValue?: IChart<any>;
+    useClass?: new <T>(model: IModel) => IChart<T>;
 }
 
-export interface IChart<DataType> {
-    type: 'line' | 'diagram'; 
-    data: DataType[];
+export interface IChart<T> {
+    type: IChartType;
+    dataset: IDataset<T>[];
     update(): void;
+}
+
+export interface PlotPoint {
+    x: null | ((_model: IModel) => number);
+    y: (_model: IModel) => number;
+}
+
+export type IChartType = 'plot' | 'histogram'
+
+export interface IDataset<T> {
+    [index: number]: T;
 }
 
 export interface IPopulationConfig<Entity> {
@@ -109,10 +120,12 @@ export class Model implements IModel {
 
     private _populations;
     private _actions;
+    private _charts;
 
     public constructor(private readonly _config: IModelConfig) {
         this._populations = new Map<string, IPopulation<any>>();
         this._actions = new Map<string, IAction>();
+        this._charts = new Map<string, object>();
     }
 
     public get globals() {
@@ -125,6 +138,10 @@ export class Model implements IModel {
 
     public get actions() {
         return this._actions;
+    }
+
+    public get charts() {
+        return this._charts;
     }
 
     public tick(): IModel {
