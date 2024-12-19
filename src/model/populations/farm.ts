@@ -16,6 +16,5 @@ export class Farm {
             _model.globals?.FARM_POSITION_X ?? 0, 
             _model.globals?.FARM_POSITION_Y ?? 0
         );
-        console.log('created farm');
     }
 }

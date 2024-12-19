@@ -76,7 +76,6 @@ export class ModelScene extends PixiContainer implements SceneInterface {
     }
 
     update(_framesPassed: number): void {
-        console.log('ppp');
         this._gui.update(_framesPassed);
         this._model.instances.forEach((population, token) => {
             if (!population.presentation) {

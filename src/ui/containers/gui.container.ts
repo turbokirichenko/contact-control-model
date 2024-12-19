@@ -39,7 +39,6 @@ class ScrollScaleBar extends PixiContainer implements SceneInterface {
             }
         })
         this._bg.on('pointermove', (event: FederatedPointerEvent) => {
-            console.log('move');
             if (this._target) {
                 var x = this._target.x;
                 if (Math.abs(this._target.position.x + event.movementX) < (this._scrollLine.width/2 - 10)) {
