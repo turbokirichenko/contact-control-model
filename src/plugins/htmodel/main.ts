@@ -11,7 +11,7 @@ export interface IActionConfig {
     useCLass?: new (model: IModel/**use to get populations*/) => IAction;
 }
 
-export type IChartType = 'plot' | 'histogram';
+export type IChartType = 'plot';
 
 export interface IChartConfig {
     token: string;
@@ -63,6 +63,7 @@ export interface IModel {
     reset(): IModel;
     globals: IParameters | undefined;
     actions: Map<string, IAction>;
+    charts: Map<string, IChart>;
     populations: Map<string, IPopulation<any>>;
     [token: string]: any;
 }
@@ -279,11 +280,10 @@ export class Dataset implements IDataset {
         this._capacity = _config.capacity ?? 100;
         this._update = () => {
             var value = _config.measure(_model);
-            this._dataset.push(value);
+            var len = this._dataset.length;
+            this._dataset[len] = value;
             if (this._dataset.length > this._capacity) {
-                while(this._dataset.length - this._capacity > 0) {
-                    this._dataset.shift();
-                }
+                this._dataset.splice(0, this._dataset.length - this._capacity);
             }
         }
     }
