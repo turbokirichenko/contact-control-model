@@ -4,6 +4,7 @@ import { Manager } from "../../plugins/engine/manager";
 import { SceneInterface } from "../../plugins/engine/manager";
 import { GUIContainer } from "../containers/gui.container";
 import { IModel, IPresentation } from "../../plugins/htmodel/main";
+import { ChartsContainer } from "../containers/charts.container";
 
 class Presentation<T> extends PixiContainer {
     constructor(public config: IPresentation<T>, agent: T) {
@@ -47,6 +48,7 @@ const EVENTS = {
 
 export class ExampleScene extends PixiContainer implements SceneInterface {
     private _gui: PixiContainer & SceneInterface;
+    private _chartPanel: PixiContainer & SceneInterface;
     private _containersMap: Map<string, Presentation<any>[]>;
     private _screen: PixiContainer;
     private _target: PixiContainer | null;
@@ -59,6 +61,7 @@ export class ExampleScene extends PixiContainer implements SceneInterface {
         const parentHeight = Manager.height;
         this._containersMap = new Map();
         this._gui = new GUIContainer(this._model, this._commandsQueue);
+        this._chartPanel = new ChartsContainer(this._model);
 
         const bg_texture = PixiTexture.from(SCENE_CONSTANTS.BG_TEXTURE_PATTERN);
         bg_texture.source.width = SCENE_CONSTANTS.PLATO_SOURCE_SIZE;
@@ -78,7 +81,7 @@ export class ExampleScene extends PixiContainer implements SceneInterface {
         this._plato = plato;
         this._screen.addChild(this._plato);
 
-        this.addChild(this._screen, this._gui);
+        this.addChild(this._screen, this._gui, this._chartPanel);
         this.resize(parentWidth, parentHeight);
 
         this.interactive = true;
@@ -133,15 +136,20 @@ export class ExampleScene extends PixiContainer implements SceneInterface {
             }
         });
 
+        this._chartPanel.update(_framesPassed);
         if (SCENE_CONFIG.SCALE != this._screen.scale.x) {
             this._screen.scale.set(SCENE_CONFIG.SCALE);
         }
     }
 
-    resize(_w: number, _h: number): void {
+    public resize(_w: number, _h: number): void {
         this._gui.resize(_w, _h);
         this._gui.position.x = _w - this._gui.width;
         this._gui.position.y = 0;
+
+        this._chartPanel.resize(_w, _h);
+        this._chartPanel.position.x = _w - this._gui.width - 20 - this._chartPanel.width;
+        this._chartPanel.y = 0;
     }
 
     private _onMove(event: FederatedPointerEvent) {

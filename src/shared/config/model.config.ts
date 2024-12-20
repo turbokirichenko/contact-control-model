@@ -1,4 +1,4 @@
-import { IModelConfig } from "../../plugins/htmodel/main";
+import { IModelConfig, IModel } from "../../plugins/htmodel/main";
 import { CommonActions } from "../../model/actions/common.actions";
 import { FARMS_TOKEN, COWS_TOKEN, VIRUSES_TOKEN, Cow, Farm, Virus } from "../../model/populations";
 
@@ -14,11 +14,25 @@ export const modelConfig: IModelConfig = {
         FARM_HEIGHT_METERS: 100,
         FARM_POSITION_X: 0,
         FARM_POSITION_Y: 0,
-        VIRUS_SPREAD_PROBABILITY: 0.001,
+        VIRUS_SPREAD_PROBABILITY: 1,
         VIRUS_INFECT_RADIUS: 3,
     },
     actions: [
         { token: CommonActions.name, useCLass: CommonActions },
+    ],
+    charts: [
+        {
+            token: 'cowPopulationInTime',
+            datasets: [
+                { 
+                    title: 'cows population',
+                    measure: (_model: IModel) => {
+                        var size = _model.use(VIRUSES_TOKEN)?.size;
+                        return size ?? 0;
+                    }
+                }
+            ]
+        }
     ],
     populations: [
         { 

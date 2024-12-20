@@ -11,27 +11,18 @@ export interface IActionConfig {
     useCLass?: new (model: IModel/**use to get populations*/) => IAction;
 }
 
+export type IChartType = 'plot';
+
 export interface IChartConfig {
     token: string;
-    useValue?: IChart<any>;
-    useClass?: new <T>(model: IModel) => IChart<T>;
+    type?: IChartType;
+    datasets: IDatasetConfig[];
 }
 
-export interface IChart<T> {
-    type: IChartType;
-    dataset: IDataset<T>[];
-    update(): void;
-}
-
-export interface PlotPoint {
-    x: null | ((_model: IModel) => number);
-    y: (_model: IModel) => number;
-}
-
-export type IChartType = 'plot' | 'histogram'
-
-export interface IDataset<T> {
-    [index: number]: T;
+export interface IDatasetConfig {
+    title: string;
+    capacity?: number;
+    measure: (_model: IModel) => number;
 }
 
 export interface IPopulationConfig<Entity> {
@@ -72,11 +63,30 @@ export interface IModel {
     reset(): IModel;
     globals: IParameters | undefined;
     actions: Map<string, IAction>;
+    charts: Map<string, IChart>;
     populations: Map<string, IPopulation<any>>;
     [token: string]: any;
 }
 
-/**
+/** Statistic chart
+ * 
+ */
+export interface IChart {
+    get type(): IChartType;
+    get datasets(): Map<string, IDataset>;
+    reset(): void;
+}
+
+/** Dataset of some chart
+ * 
+ */
+export interface IDataset {
+    get title(): string;
+    get data(): number[];
+    update(): void;
+}
+
+/** Model Controller
  * 
  */
 export interface IAction {
@@ -125,7 +135,7 @@ export class Model implements IModel {
     public constructor(private readonly _config: IModelConfig) {
         this._populations = new Map<string, IPopulation<any>>();
         this._actions = new Map<string, IAction>();
-        this._charts = new Map<string, object>();
+        this._charts = new Map<string, IChart>();
     }
 
     public get globals() {
@@ -206,6 +216,13 @@ export class Model implements IModel {
         this._config.actions?.forEach(config => {
             this.run(config.token ?? config.useCLass?.name);
         });
+        this._config.charts?.forEach(config => {
+            if (this._charts.has(config.token)) {
+                return;
+            } else {
+                this._charts.set(config.token, new Chart(this, config));
+            }
+        })
         return this;
     }
 
@@ -221,6 +238,70 @@ export class Model implements IModel {
             }
         });
         this._populations = new Map<string, IPopulation<any>>();
+        this._charts.forEach((chart) => {
+            chart.reset();
+        });
+    }
+}
+
+export class Chart implements IChart {
+    private _datasets: Map<string, IDataset>;
+
+    constructor(private readonly _model: IModel, private readonly _config: IChartConfig) {
+        this._datasets = new Map<string, IDataset>;
+        this.reset();
+    }
+
+    public get type(): IChartType {
+        return this._config.type ?? 'plot';
+    }
+
+    public get datasets(): Map<string, IDataset> {
+        return this._datasets;
+    }
+
+    public reset() {
+        this._datasets = new Map<string, IDataset>;
+        this._config.datasets.map(config => {
+            this._datasets.set(config.title, new Dataset(this._model, config));
+        });
+    }
+}
+
+export class Dataset implements IDataset {
+    private readonly _dataset: number[];
+    private readonly _title: string;
+    private readonly _capacity: number;
+    private _update: () => void;
+
+    constructor(_model: IModel, _config: IDatasetConfig) {
+        this._dataset = [];
+        this._title = _config.title;
+        this._capacity = _config.capacity ?? 100;
+        this._update = () => {
+            var value = _config.measure(_model);
+            var len = this._dataset.length;
+            this._dataset[len] = value;
+            if (this._dataset.length > this._capacity) {
+                this._dataset.splice(0, this._dataset.length - this._capacity);
+            }
+        }
+    }
+
+    public get title(): string {
+        return this._title;
+    }
+
+    public get data(): number[] {
+        return this._dataset;
+    }
+
+    public get capacity(): number {
+        return this._capacity;
+    }
+
+    public update() {
+        this._update();
     }
 }
 
