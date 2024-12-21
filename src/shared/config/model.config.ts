@@ -14,7 +14,7 @@ export const modelConfig: IModelConfig = {
         FARM_HEIGHT_METERS: 100,
         FARM_POSITION_X: 0,
         FARM_POSITION_Y: 0,
-        VIRUS_SPREAD_PROBABILITY: 1,
+        VIRUS_SPREAD_PROBABILITY: 0.001,
         VIRUS_INFECT_RADIUS: 3,
     },
     actions: [
@@ -25,14 +25,15 @@ export const modelConfig: IModelConfig = {
             token: 'cowPopulationInTime',
             datasets: [
                 { 
-                    title: 'cows population',
+                    title: 'viruses population',
+                    capacity: 10000,
+                    color: 'teal',
                     measure: (_model: IModel) => {
-                        var size = _model.use(VIRUSES_TOKEN)?.size;
-                        return size ?? 0;
+                        return _model.use(VIRUSES_TOKEN)?.size ?? 0;
                     }
-                }
+                },
             ]
-        }
+        },
     ],
     populations: [
         { 

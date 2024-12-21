@@ -22,6 +22,7 @@ export interface IChartConfig {
 export interface IDatasetConfig {
     title: string;
     capacity?: number;
+    color?: number | string;
     measure: (_model: IModel) => number;
 }
 
@@ -83,6 +84,8 @@ export interface IChart {
 export interface IDataset {
     get title(): string;
     get data(): number[];
+    get capacity(): number;
+    get color(): number | string;
     update(): void;
 }
 
@@ -131,11 +134,13 @@ export class Model implements IModel {
     private _populations;
     private _actions;
     private _charts;
+    private _timer: number;
 
     public constructor(private readonly _config: IModelConfig) {
         this._populations = new Map<string, IPopulation<any>>();
         this._actions = new Map<string, IAction>();
         this._charts = new Map<string, IChart>();
+        this._timer = 0;
     }
 
     public get globals() {
@@ -155,6 +160,7 @@ export class Model implements IModel {
     }
 
     public tick(): IModel {
+        this._timer++;
         this._populations.forEach(_pop => {
             _pop.ask(_tar => {
                 if (typeof _tar.tick === 'function') {
@@ -162,6 +168,14 @@ export class Model implements IModel {
                 }
             })
         })
+        var upd = 32;
+        if (this._timer%upd === 0) {
+            this._charts.forEach(_chart => {
+                _chart.datasets.forEach(set => {
+                    set.update();
+                });
+            })
+        }
         return this;
     }
 
@@ -272,16 +286,17 @@ export class Dataset implements IDataset {
     private readonly _dataset: number[];
     private readonly _title: string;
     private readonly _capacity: number;
+    private readonly _color: number | string;
     private _update: () => void;
 
     constructor(_model: IModel, _config: IDatasetConfig) {
         this._dataset = [];
         this._title = _config.title;
         this._capacity = _config.capacity ?? 100;
+        this._color = _config.color ?? 'black';
         this._update = () => {
             var value = _config.measure(_model);
-            var len = this._dataset.length;
-            this._dataset[len] = value;
+            this._dataset.push(value);
             if (this._dataset.length > this._capacity) {
                 this._dataset.splice(0, this._dataset.length - this._capacity);
             }
@@ -298,6 +313,10 @@ export class Dataset implements IDataset {
 
     public get capacity(): number {
         return this._capacity;
+    }
+
+    public get color(): number | string {
+        return this._color;
     }
 
     public update() {
