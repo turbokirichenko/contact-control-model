@@ -32,6 +32,22 @@ export const modelConfig: IModelConfig = {
                         return _model.use(VIRUSES_TOKEN)?.size ?? 0;
                     }
                 },
+                { 
+                    title: 'cows population',
+                    capacity: 10000,
+                    color: 'red',
+                    measure: (_model: IModel) => {
+                        return (_model.use(VIRUSES_TOKEN)?.size ?? 0) + Math.random()*30;
+                    }
+                },
+                { 
+                    title: 'rabbit population',
+                    capacity: 1000,
+                    color: 'yellow',
+                    measure: (_model: IModel) => {
+                        return (_model.use(VIRUSES_TOKEN)?.size ?? 0) + Math.random()*30;
+                    }
+                },
             ]
         },
     ],
