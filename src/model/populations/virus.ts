@@ -6,28 +6,40 @@ export const VIRUSES_TOKEN = 'viruses';
 export class Virus {
     private _cows?: IPopulation<Cow>;
     private _viruses?: IPopulation<Virus>;
+    private _seconds: number = 0;
+    private _incubationTime: number;
 
     public infected: Cow | null;
     public infectZone: number;
     public infectProbability: number;
+    public period: 'none' | 'incubation' | 'active';
     
-    constructor(private readonly _model: IModel) {
+    constructor(private readonly _model: IModel, cow?: Cow) {
         this._cows = this._model.use<Cow>(COWS_TOKEN);
         this._viruses = this._model.use<Virus>(VIRUSES_TOKEN);
         this.infectZone = this._model.globals?.VIRUS_INFECT_RADIUS;
         this.infectProbability = this._model.globals?.VIRUS_SPREAD_PROBABILITY;
-        this.infected = null;
+        this._incubationTime = this._model.globals?.VIRUS_INCUBATION_TIME;
+        this.infected = cow ?? null;
+        this.period = 'none';
     }
 
     public tick() {
         if (this.infected) {
-            var cows = this._seekInfectedCows(this.infected);
-            cows.map(_cow => {
-                var spawns = this._viruses?.create(1) as Virus[] | undefined;
-                if (spawns?.length) {
-                    spawns[0].infect(_cow);
+            if (this.period === 'active') {
+                var cows = this._seekInfectedCows(this.infected);
+                cows.map(_cow => {
+                    var spawns = this._viruses?.create(1) as Virus[] | undefined;
+                    if (spawns?.length) {
+                        spawns[0].infect(_cow);
+                    }
+                });
+            } else if(this.period === 'incubation') {
+                this._seconds++;
+                if (this._seconds >= this._incubationTime) {
+                    this.period = 'active';
                 }
-            });
+            }
         }
     }
 
@@ -40,6 +52,7 @@ export class Virus {
         });
         if (flag) {
             this.infected = _obj;
+            this.period = 'incubation';
         } else {
             this._viruses?.remove(this);
         }

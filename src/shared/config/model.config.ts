@@ -12,10 +12,11 @@ export const modelConfig: IModelConfig = {
         COW_WAITING_TIME: 20*60,
         FARM_WIDTH_METERS: 100,
         FARM_HEIGHT_METERS: 100,
-        FARM_POSITION_X: 0,
-        FARM_POSITION_Y: 0,
-        VIRUS_SPREAD_PROBABILITY: 0.001,
+        FARM_POSITION_X: 10,
+        FARM_POSITION_Y: 10,
+        VIRUS_SPREAD_PROBABILITY: 0.01,
         VIRUS_INFECT_RADIUS: 3,
+        VIRUS_INCUBATION_TIME: 60*60*4,
     },
     actions: [
         { token: CommonActions.name, useCLass: CommonActions },
@@ -27,7 +28,7 @@ export const modelConfig: IModelConfig = {
             datasets: [
                 { 
                     title: 'cow population',
-                    capacity: 10000,
+                    capacity: 8000,
                     color: 'red',
                     measure: (_model: IModel) => {
                         return _model.use(COWS_TOKEN)?.size ?? 0;
@@ -35,7 +36,7 @@ export const modelConfig: IModelConfig = {
                 },
                 { 
                     title: 'virus population',
-                    capacity: 10000,
+                    capacity: 8000,
                     color: 'teal',
                     measure: (_model: IModel) => {
                         return _model.use(VIRUSES_TOKEN)?.size ?? 0;
@@ -82,6 +83,8 @@ export const modelConfig: IModelConfig = {
                 container: (farm: Farm) => ({
                     width: farm.width,
                     height: farm.height,
+                    positionX: farm.position.x,
+                    positionY: farm.position.y,
                     fill: 'lightgreen',
                     opacity: 0.9
                 }),

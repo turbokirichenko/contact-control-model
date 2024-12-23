@@ -18,6 +18,7 @@ export class CommonActions {
             var animals = cows.create(initialSize);
             var virus = viruses.create(1);
             virus[0].infect(animals[0]);
+            virus[0].period = 'active';
         }
     }
 
