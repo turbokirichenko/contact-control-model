@@ -11,7 +11,7 @@ export interface IActionConfig {
     useCLass?: new (model: IModel/**use to get populations*/) => IAction;
 }
 
-export type IChartType = 'plot';
+export type IChartType = 'plot' | 'histogram';
 
 export interface IChartConfig {
     token: string;
