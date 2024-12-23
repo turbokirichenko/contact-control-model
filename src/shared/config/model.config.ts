@@ -22,30 +22,53 @@ export const modelConfig: IModelConfig = {
     ],
     charts: [
         {
-            token: 'cowPopulationInTime',
+            token: 'virusPopulationInTime',
+            type: 'plot',
             datasets: [
                 { 
-                    title: 'viruses population',
+                    title: 'cow population',
+                    capacity: 10000,
+                    color: 'red',
+                    measure: (_model: IModel) => {
+                        return _model.use(COWS_TOKEN)?.size ?? 0;
+                    }
+                },
+                { 
+                    title: 'virus population',
                     capacity: 10000,
                     color: 'teal',
                     measure: (_model: IModel) => {
                         return _model.use(VIRUSES_TOKEN)?.size ?? 0;
                     }
                 },
+            ]
+        },
+        {
+            token: 'virusPopulationToTime',
+            type: 'histogram',
+            datasets: [
                 { 
-                    title: 'cows population',
-                    capacity: 10000,
+                    title: 'cow population',
+                    capacity: 1,
                     color: 'red',
                     measure: (_model: IModel) => {
-                        return (_model.use(VIRUSES_TOKEN)?.size ?? 0) + Math.random()*30;
+                        return _model.use(COWS_TOKEN)?.size ?? 0;
+                    }
+                },
+                {
+                    title: 'wellness cow population',
+                    capacity: 1,
+                    color: 'green',
+                    measure: (_model: IModel) => {
+                        return (_model.use(COWS_TOKEN)?.size ?? 0) - (_model.use(VIRUSES_TOKEN)?.size ?? 0);
                     }
                 },
                 { 
-                    title: 'rabbit population',
-                    capacity: 1000,
-                    color: 'yellow',
+                    title: 'virus population',
+                    capacity: 1,
+                    color: 'teal',
                     measure: (_model: IModel) => {
-                        return (_model.use(VIRUSES_TOKEN)?.size ?? 0) + Math.random()*30;
+                        return _model.use(VIRUSES_TOKEN)?.size ?? 0;
                     }
                 },
             ]

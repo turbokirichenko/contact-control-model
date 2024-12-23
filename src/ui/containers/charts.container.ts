@@ -47,22 +47,32 @@ export class ChartContainer extends PixiContainer implements SceneInterface {
 
     public update(_f: number) {
         var i = 0;
+        var chartLen = this._chart.datasets.size;
+        var maxValue = 100;
         this._chart.datasets.forEach(sets => {
             var line = this._lines[i];
             line.clear();
             line.position.set(30, 200);
-            var len = sets.data.length;
-            var maxValue = 150;
-            var maxTimes = sets.data.length;
-            sets.data.map((num, i) => {
-                var x = (maxTimes - (len - i))/maxTimes*230;
-                var y = -(num/maxValue)*200;
-                line.lineTo(x,y);
-            });
-            line.stroke({ 
-                width: 2, 
-                color: sets.color
-            });
+            if (this._chart.type === 'plot') {
+                var len = sets.data.length;
+                var maxTimes = sets.data.length;
+                sets.data.map((num, i) => {
+                    var x = (maxTimes - (len - i))/maxTimes*230;
+                    var y = -(num/maxValue)*180;
+                    line.lineTo(x,y);
+                });
+                line.stroke({ 
+                    width: 2, 
+                    color: sets.color
+                });
+            } else {
+                var gap = 10;
+                var len = sets.data.length;
+                var value = (sets.data[len - 1]/maxValue)*180;
+                var width = Math.min((230 - 10*chartLen)/chartLen, 70);
+                var shift = i*(width + gap);
+                line.rect(shift, -value, width, value).fill(sets.color);
+            }
             ++i;
         });
     }
