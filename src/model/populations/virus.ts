@@ -34,7 +34,7 @@ export class Virus {
                         spawns[0].infect(_cow);
                     }
                 });
-            } else if(this.period === 'incubation') {
+            } else {
                 this._seconds++;
                 if (this._seconds >= this._incubationTime) {
                     this.period = 'active';
