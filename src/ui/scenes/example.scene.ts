@@ -7,23 +7,37 @@ import { IModel, IPresentation } from "../../plugins/htmodel/main";
 import { ChartsContainer } from "../containers/charts.container";
 
 class Presentation<T> extends PixiContainer {
+    private readonly _graphic: PixiGraphics;
     constructor(public config: IPresentation<T>, agent: T) {
         super();
-        const container = config.container(agent);
-        const graphic = new PixiGraphics()
+        this._graphic = new PixiGraphics();
+        this.drawGraph(agent);
+        this.addChild(this._graphic);
+    }
+
+    update(agent: T) {
+        this._graphic.clear();
+        this.drawGraph(agent);
+    }
+
+    drawGraph(agent: T) {
+        const container = this.config.container(agent);
         if (container.type === 'circle') {
-            graphic.circle(0, 0, container.width)
+            this._graphic.circle(
+                container.positionX ?? 0, 
+                container.positionY ?? 0, 
+                container.width ?? container.height
+            ).fill(container.fill);
         } else {
-            graphic.rect(
+            this._graphic.rect(
                 container.positionX ?? 0, 
                 container.positionY ?? 0, 
                 container.width, 
                 container.height
-            );
+            ).fill(container.fill);
         }
-        graphic.fill(container.fill);
-        graphic.alpha = container.opacity ?? graphic.alpha;
-        this.addChild(graphic);
+        this._graphic.alpha = container.opacity ?? this._graphic.alpha;
+        return this._graphic;
     }
 }
 
@@ -128,6 +142,7 @@ export class ExampleScene extends PixiContainer implements SceneInterface {
                         var agent = population[index];
                         var vect = container.config.position(agent);
                         var dirc = container.config.direction(agent);
+                        container.update(agent);
                         container.position.set(vect.x, vect.y);
                         container.rotation = dirc ?? container.rotation;
                         container.renderable = true;

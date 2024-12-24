@@ -29,7 +29,7 @@ export interface IDatasetConfig {
 export interface IPopulationConfig<Entity> {
     token?: string;
     useValue?: Entity;
-    useClass?: new (model: IModel/**use to get populations*/) => Entity;
+    useClass?: new (model: IModel/**use to get populations*/, ...args: any[]) => Entity;
     presentation?: IPresentation<Entity>;
 }
 
