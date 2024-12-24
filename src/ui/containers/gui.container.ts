@@ -259,7 +259,7 @@ export class GUIContainer extends PixiContainer implements SceneInterface {
         super();
 
         this._bg = new PixiGraphics();
-        this._bg.rect(0, 0, 400, 800).fill(0x282828);
+        this._bg.rect(0, 0, 400, 860).fill(0x282828);
 
         this._modelPanel = new ModelPanel(_model);
 

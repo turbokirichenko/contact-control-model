@@ -148,7 +148,7 @@ export class GUIBarContainer extends PixiContainer implements SceneInterface {
         this._time.position.x = 5
         this._time.position.y = 30;
         this._graphic.width = DEFAULT_WIDTH;
-        this._graphic.height = parentHeight;
+        this._graphic.height = parentHeight + 100;
 
         this._speedLBtn.position.x = 5;
         this._speedLBtn.position.y = 145;

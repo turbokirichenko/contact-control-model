@@ -1,3 +1,12 @@
+export interface IModelConstants {
+    UPDATE_INTERVAL: number;
+    MAX_MODELING_TIME?: number;
+}
+
+export const MODEL_CONSTANTS: IModelConstants = {
+    UPDATE_INTERVAL: 32,
+}
+
 export interface IModelConfig {
     globals?: IParameters;
     actions?: IActionConfig[];
@@ -12,9 +21,11 @@ export interface IActionConfig {
 }
 
 export type IChartType = 'plot' | 'histogram';
+export type IChartTrigger = 'refresh' | 'update';
 
 export interface IChartConfig {
     token: string;
+    trigger?: IChartTrigger;
     type?: IChartType;
     datasets: IDatasetConfig[];
 }
@@ -62,6 +73,9 @@ export interface IModel {
     tick(): IModel;
     setup(): IModel;
     reset(): IModel;
+    update(): IModel;
+    refresh(): IModel;
+    timer: number;
     globals: IParameters | undefined;
     actions: Map<string, IAction>;
     charts: Map<string, IChart>;
@@ -74,6 +88,7 @@ export interface IModel {
  */
 export interface IChart {
     get type(): IChartType;
+    get trigger(): IChartTrigger;
     get datasets(): Map<string, IDataset>;
     reset(): void;
 }
@@ -159,7 +174,14 @@ export class Model implements IModel {
         return this._charts;
     }
 
+    public get timer() {
+        return this._timer;
+    }
+
     public tick(): IModel {
+        if (MODEL_CONSTANTS.MAX_MODELING_TIME && this._timer > MODEL_CONSTANTS.MAX_MODELING_TIME) {
+            return this;
+        }
         this._timer++;
         this._populations.forEach(_pop => {
             _pop.ask(_tar => {
@@ -168,14 +190,20 @@ export class Model implements IModel {
                 }
             })
         })
-        var upd = 32;
+        var upd = MODEL_CONSTANTS.UPDATE_INTERVAL;
         if (this._timer%upd === 0) {
-            this._charts.forEach(_chart => {
-                _chart.datasets.forEach(set => {
-                    set.update();
-                });
-            })
+            this.update();
         }
+        return this;
+    }
+
+    public update() {
+        this._updateCharts('update');
+        return this;
+    }
+
+    public refresh() {
+        this._updateCharts('refresh');
         return this;
     }
 
@@ -241,8 +269,19 @@ export class Model implements IModel {
     }
 
     public reset(): IModel {
+        this._timer = 0;
         this._reset();
         return this;
+    }
+
+    private _updateCharts(flag: IChartTrigger): void {
+        this._charts.forEach(_chart => {
+            if (_chart.trigger === flag) {
+                _chart.datasets.forEach(set => {
+                    set.update();
+                });
+            }
+        });
     }
 
     private _reset(): void {
@@ -264,6 +303,10 @@ export class Chart implements IChart {
     constructor(private readonly _model: IModel, private readonly _config: IChartConfig) {
         this._datasets = new Map<string, IDataset>;
         this.reset();
+    }
+
+    public get trigger(): IChartTrigger {
+        return this._config.trigger ?? 'update';
     }
 
     public get type(): IChartType {
@@ -344,7 +387,7 @@ export class Population<E> extends Array<E> implements IPopulation<E> {
 
     public create(size: number, ...params: any[]) {
         return Array(size).fill(0).map(_ => {
-            return this._add(params);
+            return this._add(...params);
         });
     }
 
