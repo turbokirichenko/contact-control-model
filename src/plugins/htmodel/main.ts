@@ -422,7 +422,7 @@ export class Population<E> extends Array<E> implements IPopulation<E> {
     }
 }
 
-export abstract class ModelSpawner {
+export abstract class ModelFactory {
     public static define(config: IModelConfig) {
         return new Model(config).setup();
     }
