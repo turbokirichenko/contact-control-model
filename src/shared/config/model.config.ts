@@ -1,15 +1,11 @@
-import { IModelConfig, IModel, MODEL_CONSTANTS } from "../../plugins/htmodel/main";
+import { IModelConfig, IModel } from "../../plugins/htmodel/main";
 import { CommonActions } from "../../model/actions/common.actions";
 import { FARMS_TOKEN, COWS_TOKEN, VIRUSES_TOKEN, Cow, Farm, Virus } from "../../model/populations";
 import { Cover, COVERS_TOKEN } from "../../model/populations/cover";
 
-const modelingTime = 60*60*4 - 1;
-MODEL_CONSTANTS.MAX_MODELING_TIME = modelingTime;
-
 export const modelConfig: IModelConfig = {
     globals: {
         DEFAULT_DIMENSIONS: ['m', 'm/s', 'seconds'].join(', '),
-        MODELING_MAX_TIME: modelingTime,
         COWS_INITIAL_SIZE: 100,
         COW_WIDTH_METERS: 1,
         COW_HEIGHT_METERS: 2,
@@ -21,7 +17,7 @@ export const modelConfig: IModelConfig = {
         FARM_POSITION_Y: 10,
         VIRUS_SPREAD_PROBABILITY: 0.01,
         VIRUS_INFECT_RADIUS: 3,
-        VIRUS_INCUBATION_TIME: modelingTime + 1,
+        VIRUS_INCUBATION_TIME: 14400,
         COVER_LOOP_TIME: 2,
         COVER_PROOF_EVENT_COUNT: 5,
         COVER_SPREAD_RADIUS: 3,
