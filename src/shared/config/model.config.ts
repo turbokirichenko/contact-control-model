@@ -1,11 +1,15 @@
-import { IModelConfig, IModel } from "../../plugins/htmodel/main";
+import { IModelConfig, IModel, MODEL_CONSTANTS } from "../../plugins/htmodel/main";
 import { CommonActions } from "../../model/actions/common.actions";
 import { FARMS_TOKEN, COWS_TOKEN, VIRUSES_TOKEN, Cow, Farm, Virus } from "../../model/populations";
-import { Cover, COVERS_TOKEN, Signal, SIGNALS_TOKEN } from "../../model/populations/cover";
+import { Cover, COVERS_TOKEN } from "../../model/populations/cover";
+
+const modelingTime = 60*60*4 - 1;
+MODEL_CONSTANTS.MAX_MODELING_TIME = modelingTime;
 
 export const modelConfig: IModelConfig = {
     globals: {
         DEFAULT_DIMENSIONS: ['m', 'm/s', 'seconds'].join(', '),
+        MODELING_MAX_TIME: modelingTime,
         COWS_INITIAL_SIZE: 100,
         COW_WIDTH_METERS: 1,
         COW_HEIGHT_METERS: 2,
@@ -17,10 +21,10 @@ export const modelConfig: IModelConfig = {
         FARM_POSITION_Y: 10,
         VIRUS_SPREAD_PROBABILITY: 0.01,
         VIRUS_INFECT_RADIUS: 3,
-        VIRUS_INCUBATION_TIME: 60*60*4,
-        COVER_LOOP_TIME: 10,
+        VIRUS_INCUBATION_TIME: modelingTime + 1,
+        COVER_LOOP_TIME: 2,
         COVER_PROOF_EVENT_COUNT: 5,
-        COVER_SPREAD_RADIUS: 2.55,
+        COVER_SPREAD_RADIUS: 3,
     },
     actions: [
         { token: CommonActions.name, useCLass: CommonActions },
@@ -30,14 +34,6 @@ export const modelConfig: IModelConfig = {
             token: 'virusPopulationInTime',
             type: 'plot',
             datasets: [
-                { 
-                    title: 'cow population',
-                    capacity: 8000,
-                    color: 'red',
-                    measure: (_model: IModel) => {
-                        return _model.use(COWS_TOKEN)?.size ?? 0;
-                    }
-                },
                 { 
                     title: 'virus population',
                     capacity: 8000,
@@ -71,29 +67,58 @@ export const modelConfig: IModelConfig = {
         {
             token: 'virusPopulationToTime',
             type: 'histogram',
+            trigger: 'refresh',
             datasets: [
-                { 
-                    title: 'cow population',
-                    capacity: 1,
-                    color: 'red',
-                    measure: (_model: IModel) => {
-                        return _model.use(COWS_TOKEN)?.size ?? 0;
-                    }
-                },
                 {
-                    title: 'wellness cow population',
+                    title: 'detected',
                     capacity: 1,
                     color: 'green',
                     measure: (_model: IModel) => {
-                        return (_model.use(COWS_TOKEN)?.size ?? 0) - (_model.use(VIRUSES_TOKEN)?.size ?? 0);
+                        var count = 0;
+                        _model.use<Cover>(COVERS_TOKEN)?.ask(cover => cover.infectSignal && count++);
+                        return count;
                     }
                 },
                 { 
-                    title: 'virus population',
+                    title: 'infected',
                     capacity: 1,
                     color: 'teal',
                     measure: (_model: IModel) => {
                         return _model.use(VIRUSES_TOKEN)?.size ?? 0;
+                    }
+                },
+                {
+                    title: '1st type error',
+                    capacity: 1,
+                    color: 'purple',
+                    measure: (_model: IModel) => {
+                        var count = 0;
+                        var cows = new Set<Cow>();
+                        _model.use<Cover>(COVERS_TOKEN)?.ask(cover => cover.infectSignal && cows.add(cover.cow));
+                        var viruses = _model.use<Virus>(VIRUSES_TOKEN);
+                        viruses?.ask(virus => {
+                            if (virus.infected && !cows.has(virus.infected)) {
+                                count++;
+                            }
+                        })
+                        return count;
+                    }
+                },
+                {
+                    title: '2nd type error',
+                    capacity: 1,
+                    color: 'pink',
+                    measure: (_model: IModel) => {
+                        var count = 0;
+                        var cows = new Set<Cow>();
+                        _model.use<Cover>(COVERS_TOKEN)?.ask(cover => cover.infectSignal && cows.add(cover.cow));
+                        var viruses = _model.use<Virus>(VIRUSES_TOKEN);
+                        viruses?.ask(virus => {
+                            if (virus.infected && cows.has(virus.infected)) {
+                                count++;
+                            }
+                        })
+                        return cows.size - count;
                     }
                 },
             ]
@@ -156,22 +181,17 @@ export const modelConfig: IModelConfig = {
             }
         },
         {
-            token: SIGNALS_TOKEN,
-            useClass: Signal,
-        },
-        {
             token: COVERS_TOKEN,
             useClass: Cover,
             presentation: {
                 container: (cover: Cover) => ({
                     width: 1,
                     height: 1,
-                    fill:  'black',
+                    fill:  'red',
                     type: 'circle',
-                    opacity: 0.8
+                    opacity: cover.infectSignal ? 1 : 0,
                 }),
                 position: (cover: Cover) => {
-                    console.log(cover);
                     return ({
                         x: (cover.cow?.position.x ?? 0),
                         y: (cover.cow?.position.y ?? 0),

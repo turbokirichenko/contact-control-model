@@ -1,83 +1,119 @@
-import { PixiContainer,PixiGraphics, PixiTexture, PixiTilingSprite } from "../../plugins/engine";
-import { Manager, SceneInterface } from "../../plugins/engine/manager";
-import { IAgent, IModel, IPresentation } from "../../plugins/htmodel";
-import { GUIBarContainer } from "../containers/gui-bar.container";
+import { FederatedPointerEvent } from "pixi.js";
+import { PixiContainer, PixiGraphics, PixiTilingSprite, PixiTexture } from "../../plugins/engine";
+import { Manager } from "../../plugins/engine/manager";
+import { SceneInterface } from "../../plugins/engine/manager";
+import { GUIContainer } from "../containers/gui.container";
+import { IModel, IPresentation } from "../../plugins/htmodel/main";
+import { ChartsContainer } from "../containers/charts.container";
 
-class AgentPresentation<T extends IAgent> extends PixiContainer {
-    constructor(public config: IPresentation, agent: T) {
+class Presentation<T> extends PixiContainer {
+    private readonly _graphic: PixiGraphics;
+    constructor(public config: IPresentation<T>, agent: T) {
         super();
-        const container = config.container(agent);
-        const graphic = new PixiGraphics()
+        this._graphic = new PixiGraphics();
+        this.drawGraph(agent);
+        this.addChild(this._graphic);
+    }
+
+    update(agent: T) {
+        this._graphic.clear();
+        this.drawGraph(agent);
+    }
+
+    drawGraph(agent: T) {
+        const container = this.config.container(agent);
         if (container.type === 'circle') {
-            graphic.circle(0, 0, container.width)
+            this._graphic.circle(
+                container.positionX ?? 0, 
+                container.positionY ?? 0, 
+                container.width ?? container.height
+            ).fill(container.fill);
         } else {
-            graphic.rect(
+            this._graphic.rect(
                 container.positionX ?? 0, 
                 container.positionY ?? 0, 
                 container.width, 
                 container.height
-            );
+            ).fill(container.fill);
         }
-        graphic.fill(container.fill);
-        graphic.alpha = container.opacity ?? graphic.alpha;
-        this.addChild(graphic);
+        this._graphic.alpha = container.opacity ?? this._graphic.alpha;
+        return this._graphic;
     }
 }
 
-const PLATO_DEFAULT_SIZE = 4000;
-const PLATO_SOURCE_SIZE = 16;
-export const X = {
-    SCALE: 8,
-    SCORE: 1
+const SCENE_CONSTANTS = {
+    BG_TEXTURE_PATTERN: 'pattern',
+    PLATO_DEFAULT_SIZE: 4000,
+    PLATO_SOURCE_SIZE: 20,
+    PLATO_ANCHOR: 0.5,
+    PLATO_ALPHA: 0.1,
+}
+
+export const SCENE_CONFIG = {
+    SCALE: 4,
+    SPEED: 1,
+}
+
+const EVENTS = {
+    POINTERDOWN: 'pointerdown',
+    POINTERUP: 'pointerup',
+    POINTERUPOUTSIDE: 'pointerupoutside'
 }
 
 export class ModelScene extends PixiContainer implements SceneInterface {
-
-    private _containersMap: Map<string, AgentPresentation<IAgent>[]> = new Map();
     private _gui: PixiContainer & SceneInterface;
+    private _chartPanel: PixiContainer & SceneInterface;
+    private _containersMap: Map<string, Presentation<any>[]>;
     private _screen: PixiContainer;
-    private _target: any = null;
+    private _target: PixiContainer | null;
     private _plato: PixiContainer;
+    private _commandsQueue: (() => void)[] = [];
 
     constructor(private readonly _model: IModel) {
         super();
-        this.interactive = true;
-        this.position.x = 0;
-        this.position.y = 0;
         const parentWidth = Manager.width;
         const parentHeight = Manager.height;
-        this.width = parentWidth;
-        this.height = parentHeight;
-        this._gui = new GUIBarContainer(this._model);
+        this._containersMap = new Map();
+        this._gui = new GUIContainer(this._model, this._commandsQueue);
+        this._chartPanel = new ChartsContainer(this._model);
 
-        this._screen = new PixiContainer();
-        this._screen.interactive = true;
-        const bg_texture = PixiTexture.from('pattern');
-        bg_texture.source.width = PLATO_SOURCE_SIZE;
-        bg_texture.source.height = PLATO_SOURCE_SIZE;
+        const bg_texture = PixiTexture.from(SCENE_CONSTANTS.BG_TEXTURE_PATTERN);
+        bg_texture.source.width = SCENE_CONSTANTS.PLATO_SOURCE_SIZE;
+        bg_texture.source.height = SCENE_CONSTANTS.PLATO_SOURCE_SIZE;
         bg_texture.update()
         const plato = new PixiTilingSprite({
             texture: bg_texture,
-            width: PLATO_DEFAULT_SIZE,
-            height: PLATO_DEFAULT_SIZE
+            width: SCENE_CONSTANTS.PLATO_DEFAULT_SIZE,
+            height: SCENE_CONSTANTS.PLATO_DEFAULT_SIZE
         });
-        plato.anchor = 0.5;
-        plato.alpha = 0.10;
+        plato.anchor = SCENE_CONSTANTS.PLATO_ANCHOR;
+        plato.alpha = SCENE_CONSTANTS.PLATO_ALPHA;
+
+        this._target = null;
+        this._screen = new PixiContainer();
+        this._screen.scale.set(SCENE_CONFIG.SCALE);
         this._plato = plato;
-        this._screen.addChild(plato);
+        this._screen.addChild(this._plato);
 
-        this._screen.on("pointerdown", this._onStart.bind(this), this._screen);
-        this.on('pointerup', this._onEnd.bind(this));
-        this.on('pointerupoutside', this._onEnd.bind(this));
-        this._screen.scale = X.SCALE;
-
-        this.addChild(this._screen, this._gui);
+        this.addChild(this._screen, this._gui, this._chartPanel);
         this.resize(parentWidth, parentHeight);
+
+        this.interactive = true;
+        this._screen.interactive = true;
+        this._screen.on(EVENTS.POINTERDOWN, this._onStart.bind(this), this._screen);
+        this.on(EVENTS.POINTERUP, this._onEnd.bind(this));
+        this.on(EVENTS.POINTERUPOUTSIDE, this._onEnd.bind(this));
     }
 
     update(_framesPassed: number): void {
+        while(this._commandsQueue.length) {
+            var command = this._commandsQueue.shift();
+            if (command) {
+                command();
+            }
+        }
         this._gui.update(_framesPassed);
-        this._model.instances.forEach((population, token) => {
+        this._model.populations.forEach((population, token) => {
             if (!population.presentation) {
                 return;
             }
@@ -91,7 +127,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
                     return;
                 }
                 var insertContainers = Array(insertSize).fill(0).map((_, index) => {
-                    const cowContainer = new AgentPresentation(population.presentation!, population[containers?.length ?? 0 + index]);
+                    const cowContainer = new Presentation(population.presentation!, population[containers?.length ?? 0 + index]);
                     return cowContainer;
                 });
                 if (insertContainers.length) {
@@ -106,6 +142,7 @@ export class ModelScene extends PixiContainer implements SceneInterface {
                         var agent = population[index];
                         var vect = container.config.position(agent);
                         var dirc = container.config.direction(agent);
+                        container.update(agent);
                         container.position.set(vect.x, vect.y);
                         container.rotation = dirc ?? container.rotation;
                         container.renderable = true;
@@ -113,26 +150,37 @@ export class ModelScene extends PixiContainer implements SceneInterface {
                 })
             }
         });
+
+        this._chartPanel.update(_framesPassed);
+        if (SCENE_CONFIG.SCALE != this._screen.scale.x) {
+            this._screen.scale.set(SCENE_CONFIG.SCALE);
+        }
     }
 
-    resize(_parentWidth: number, _parentHeight: number): void {
-        this._screen.position.set(0, 0);
-        this._gui.resize(_parentWidth, _parentHeight);
-        this._gui.position.x = _parentWidth - this._gui.width;
+    public resize(_w: number, _h: number): void {
+        this._gui.scale.set(0.8);
+        this._gui.resize(_w, _h);
+        this._gui.position.x = _w - this._gui.width;
         this._gui.position.y = 0;
-        this._plato.position.set((_parentWidth - this._gui.width)/2, (_parentHeight)/2);
+
+        this._chartPanel.scale.set(0.8)
+        this._chartPanel.resize(_w, _h);
+        this._chartPanel.position.x = _w - this._gui.width - 20 - this._chartPanel.width;
+        this._chartPanel.y = 0;
     }
 
-    private _onMove(event: PointerEvent) {
+    private _onMove(event: FederatedPointerEvent) {
         if (this._target) {
             var [x, y] = [this._target.position.x, this._target.position.y]
-            if (Math.abs(x + event.movementX) > 2000 || Math.abs(y + event.movementY) > 2000) {
-                return;
+            if (
+                Math.abs(x + event.movementX) < SCENE_CONSTANTS.PLATO_DEFAULT_SIZE/2 &&
+                Math.abs(y + event.movementY) < SCENE_CONSTANTS.PLATO_DEFAULT_SIZE/2) 
+            {
+                this._target.position.set(
+                    x + event.movementX,
+                    y + event.movementY,
+                );
             }
-            this._target.position.set(
-                x + event.movementX,
-                y + event.movementY,
-            );
         }
     }
     private _onEnd() {

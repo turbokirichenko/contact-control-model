@@ -73,6 +73,8 @@ export class ChartContainer extends PixiContainer implements SceneInterface {
                 var shift = i*(width + gap);
                 line.rect(shift, -value, width, value).fill(sets.color);
             }
+            var title = this._titles[i];
+            title.text = `${sets.title}: ${sets.data[sets.data.length - 1] ?? 'null'}`;
             ++i;
         });
     }

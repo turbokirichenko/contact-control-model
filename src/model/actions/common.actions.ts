@@ -19,14 +19,28 @@ export class CommonActions {
             farms.create(1);
             var animals = cows.create(initialSize);
             cows.ask(cow => {
-                console.log(cow);
                 covers?.create(1, cow);
             })
-            console.log(covers);
             var virus = viruses.create(1);
             virus[0].infect(animals[0]);
             virus[0].period = 'active';
         }
+    }
+
+    detect() {
+        var viruses = this._model[VIRUSES_TOKEN] as IPopulation<Virus> | undefined;
+        var covers = this._model[COVERS_TOKEN] as IPopulation<Cover> | undefined;
+        viruses?.ask(virus => {
+            if (virus.period === 'active') {
+                covers?.ask(cover => {
+                    if (cover.cow === virus.infected) {
+                        cover.infectSignal = true;
+                        cover.data.map(cover => cover.infectSignal = true);
+                    }
+                })
+            }
+        });
+        this._model.refresh();
     }
 
     tick() {

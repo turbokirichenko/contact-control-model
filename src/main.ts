@@ -7,7 +7,7 @@ import { IPixiApplicationOptions, PixiAssets } from './plugins/engine';
 import { Loader } from './plugins/engine/loader';
 import { options } from './shared/config/manifest';
 import { LoaderScene } from './ui/scenes/loader.scene';
-import { ExampleScene } from './ui/scenes/example.scene';
+import { ModelScene } from './ui/scenes/model.scene';
 
 const boostsrap = async () => {
     const canvas = document.getElementById("pixi-screen") as HTMLCanvasElement;
@@ -31,7 +31,7 @@ const boostsrap = async () => {
     const loaderScene = new LoaderScene();
     Manager.changeScene(loaderScene);
     loader.download(options, loaderScene.progressCallback.bind(loaderScene)).then(() => {
-        Manager.changeScene(new ExampleScene(model));
+        Manager.changeScene(new ModelScene(model));
     });
 }
 

@@ -2,7 +2,7 @@ import { FederatedPointerEvent } from "pixi.js";
 import { PixiContainer, PixiGraphics, PixiText } from "../../plugins/engine";
 import { SceneInterface } from "../../plugins/engine/manager";
 import { IModel, IPopulation } from "../../plugins/htmodel/main";
-import { SCENE_CONFIG } from "../scenes/example.scene";
+import { SCENE_CONFIG } from "../scenes/model.scene";
 
 class ScrollScaleBar extends PixiContainer implements SceneInterface {
     private _scrollPoint: PixiGraphics;
@@ -259,7 +259,7 @@ export class GUIContainer extends PixiContainer implements SceneInterface {
         super();
 
         this._bg = new PixiGraphics();
-        this._bg.rect(0, 0, 400, 800).fill(0x282828);
+        this._bg.rect(0, 0, 400, 860).fill(0x282828);
 
         this._modelPanel = new ModelPanel(_model);
 
